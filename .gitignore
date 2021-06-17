@@ -1,3 +1,6 @@
+
+applocals.py
+
 # Django #
 *.log
 *.pot
