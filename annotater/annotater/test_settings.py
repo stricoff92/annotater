@@ -30,3 +30,8 @@ CACHES = {
     }
 }
 EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
+
+
+MEMETEXT_S3_BUCKET = "foobar"
+AWS_SECRET_ACCESS_KEY = "foobar"
+AWS_ACCESS_KEY_ID = "foobar"
