@@ -19,6 +19,7 @@ class AssignedAnnotation(BaseModel):
     batch = models.ForeignKey("memetext.AnnotationBatch", on_delete=models.PROTECT)
     payout_rate = models.ForeignKey("memetext.PayoutRate", on_delete=models.PROTECT)
     assigned_count = models.PositiveIntegerField()
+    is_active = models.BooleanField(default=True)
 
     @property
     def completed_count(self) -> int:
@@ -39,6 +40,10 @@ class AssignedAnnotation(BaseModel):
     @property
     def is_paid(self):
         return self.payout_amount >= self.paid_amount
+
+    @property
+    def invoice_id(self) -> str:
+        return self.slug[:8]
 
 
 class TestAnnotation(BaseModel):
