@@ -9,9 +9,12 @@ from django.db import models
 from django.db.models import Sum
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.forms import ValidationError
 
 
 class AssignedAnnotation(BaseModel):
+    """ AssignedAnnotation represents an task given to a user to look at N number of item and annotate them.
+    """
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.PROTECT,
@@ -23,7 +26,7 @@ class AssignedAnnotation(BaseModel):
 
     @property
     def completed_count(self) -> int:
-        self.testannotation_set.count()
+        return self.testannotation_set.count()
 
     @property
     def is_complete(self) -> bool:
@@ -45,10 +48,19 @@ class AssignedAnnotation(BaseModel):
     def invoice_id(self) -> str:
         return self.slug[:8]
 
-
+    def save(self, *a, **k):
+        if self.id:
+            if AssignedAnnotation.objects.exclude(id=self.id).filter(user=self.user, is_active=True).exists():
+                raise ValidationError
+        else:
+            if AssignedAnnotation.objects.filter(user=self.user, is_active=True).exists():
+                raise ValidationError
+        return super().save(*a, **k)
 
 
 class TestAnnotation(BaseModel):
+    """ Instance of a user provided annotation of an s3_image.
+    """
     s3_image = models.ForeignKey(
         "memetext.S3Image", on_delete=models.PROTECT)
 
@@ -57,12 +69,14 @@ class TestAnnotation(BaseModel):
     )
 
     def s3_path(self) -> str:
-        return f"{settings.MEMETEXT_S3_BUCKET}/{self.s3_image.slug}/data.json"
+        return f"{settings.MEMETEXT_S3_BUCKET}/{self.s3_image.slug}/data-{self.slug}.json"
 
 
 
 
 class ControlAnnotation(BaseModel):
+    """ Expected value a TestAnnotation's data
+    """
     s3_image = models.ForeignKey(
         "memetext.S3Image", on_delete=models.PROTECT)
 

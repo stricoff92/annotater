@@ -12,5 +12,15 @@ urlpatterns = [
     path("add-annotation", web_views.add_annotation, name="memetext-web-add-annotation"),
 
     # api views
+    path(
+        "api/get-image/<slug:assignment_slug>",
+        api_views.get_image_to_annotate,
+        name="memetext-api-get-image",
+    ),
+    path(
+        "api/download-image/<slug:assignment_slug>/<slug:image_slug>",
+        api_views.download_image,
+        name="memetext-api-download-image",
+    ),
 ]
 

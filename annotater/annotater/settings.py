@@ -11,8 +11,13 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from string import ascii_letters, digits
 
 from annotater import applocals
+
+
+ALLOWED_TOKEN_CHARS = frozenset(ascii_letters + digits)
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,6 +32,10 @@ ALLOWED_HOSTS = applocals.ALLOWED_HOSTS
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+
+TOKEN_KEY = applocals.TOKEN_KEY
+if any(c not in ALLOWED_TOKEN_CHARS for c in TOKEN_KEY):
+    raise Exception("invalid character in TOKEN_KEY")
 
 # Application definition
 

@@ -12,3 +12,4 @@ class Payment(BaseModel):
     assignment = models.ForeignKey("memetext.AssignedAnnotation", on_delete=models.PROTECT)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField()
+    memo = models.CharField(max_length=255, blank=True, null=True, default=None)

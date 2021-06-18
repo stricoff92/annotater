@@ -15,7 +15,7 @@ class BaseModel(models.Model):
     def new_slug(self) -> str:
         while True:
             slug = str(uuid4())
-            if not self.objects.exists(slug=slug):
+            if not models.QuerySet(self).filter(slug=slug).exists():
                 return slug
 
     def save(self, *args, **kwargs):
