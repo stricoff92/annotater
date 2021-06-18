@@ -54,14 +54,14 @@ class S3Image(BaseModel):
                 "slug":self.slug,
                 "expires":(timezone.now() + dt.timedelta(seconds=5)).isoformat(),
             },
-            settings.TOKEN_KEY,
+            settings.SECRET_KEY,
             "HS256",
         )
 
     def load_image_token_is_valid(self, token:str, nowtz=None) -> bool:
         nowtz = nowtz or timezone.now()
         try:
-            data = jwt.decode(token, settings.TOKEN_KEY, "HS256")
+            data = jwt.decode(token, settings.SECRET_KEY, "HS256")
             if datetime_parser.parse(data['expires']) < nowtz:
                 raise Exception
             if data['slug'] != self.slug:
@@ -79,12 +79,12 @@ class S3Image(BaseModel):
                 "__salt":timezone.now().isoformat(),
                 "slug":self.slug,
             },
-            settings.TOKEN_KEY + load_image_token,
+            settings.SECRET_KEY + load_image_token,
             "HS256",
         )
 
     def annotate_image_token_is_valid(self, token: str, load_image_token: str) -> bool:
-        data = jwt.decode(token, settings.TOKEN_KEY + load_image_token, "HS256")
+        data = jwt.decode(token, settings.SECRET_KEY + load_image_token, "HS256")
         try:
             if data['slug'] != self.slug:
                 raise Exception

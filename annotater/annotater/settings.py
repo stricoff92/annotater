@@ -24,6 +24,7 @@ ALLOWED_TOKEN_CHARS = frozenset(ascii_letters + digits)
 BASE_DIR = Path(__file__).resolve().parent.parent
 print({"BASE_DIR":BASE_DIR})
 
+ABSOLUTE_BASE_URL = applocals.ABSOLUTE_BASE_URL
 
 SECRET_KEY = applocals.SECRET_KEY
 DEBUG = applocals.DEBUG
@@ -33,9 +34,6 @@ ALLOWED_HOSTS = applocals.ALLOWED_HOSTS
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-TOKEN_KEY = applocals.TOKEN_KEY
-if any(c not in ALLOWED_TOKEN_CHARS for c in TOKEN_KEY):
-    raise Exception("invalid character in TOKEN_KEY")
 
 # Application definition
 
@@ -49,6 +47,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'memetext.apps.MemetextConfig',
     'website.apps.WebsiteConfig',
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
 ]
 
 if DEBUG:
@@ -61,6 +63,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
+    'two_factor.middleware.threadlocals.ThreadLocals',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -154,6 +158,16 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Session keys used to store two_factor secret keys. These keys are generated when
+# a user is registering a device for 2FA
+TFA_QR_SESSION_SECRET_KEY = 'django_two_factor-qr_secret_key'
+TFA_QR_SESSION_SECRET_KEY_HEX = TFA_QR_SESSION_SECRET_KEY + "_hex"
+
+TFA_SMS_SESSION_SECRET_KEY = 'django_two_factor-sms_secret_key'
+TFA_SMS_SESSION_SECRET_KEY_HEX = TFA_SMS_SESSION_SECRET_KEY + "_hex"
+
 
 
 MEMETEXT_S3_BUCKET = applocals.MEMETEXT_S3_BUCKET

@@ -22,6 +22,28 @@ class TestImageDownload(BaseTestCase):
         self.batch = self.create_annotation_batch()
         self.s3image = self.create_s3_image(self.batch)
 
+    # GET IMAGE ROUTE
+
+    def test_user_must_be_authenticated(self):
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse(
+            "memetext-api-get-image",
+            kwargs={"assignment_slug":annotation_assignment.slug})
+
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+    def test_user_cannot_user_another_users_assigned_annotation(self):
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch, user=self.other_user)
+        url = reverse(
+            "memetext-api-get-image",
+            kwargs={"assignment_slug":annotation_assignment.slug})
+
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
     def test_user_can_request_image_url_from_api(self):
         self.client.force_login(self.user)
@@ -63,7 +85,7 @@ class TestImageDownload(BaseTestCase):
 
         response = self.client.get(url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        load_image_token_claims = jwt.decode(response.data['load_image_token'], settings.TOKEN_KEY, "HS256")
+        load_image_token_claims = jwt.decode(response.data['load_image_token'], settings.SECRET_KEY, "HS256")
         self.assertEqual(set(['slug', 'expires']), set(load_image_token_claims.keys()))
         self.assertEqual(load_image_token_claims['slug'], self.s3image.slug)
         self.assertEqual(load_image_token_claims['expires'], "2020-05-17T14:17:35+00:00") # 5 seconds later.
@@ -79,10 +101,10 @@ class TestImageDownload(BaseTestCase):
 
         response = self.client.get(url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        load_image_token_claims = jwt.decode(response.data['load_image_token'], settings.TOKEN_KEY, "HS256")
+        load_image_token_claims = jwt.decode(response.data['load_image_token'], settings.SECRET_KEY, "HS256")
         annotate_image_token_claims = jwt.decode(
             response.data['annotate_image_token'],
-            settings.TOKEN_KEY + response.data['load_image_token'],
+            settings.SECRET_KEY + response.data['load_image_token'],
             "HS256"
         )
         self.assertEqual(set(['__salt', 'slug']), set(annotate_image_token_claims.keys()))
@@ -211,3 +233,26 @@ class TestImageDownload(BaseTestCase):
         self.s3image.save()
         response = self.client.get(url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+
+    # DOWNLOAD IMAGE ROUTE
+
+    def test_user_must_be_authenticated_to_download_image(self):
+        pass
+
+
+    def test_user_can_download_image(self):
+        pass
+
+
+    def test_headers_are_sent_to_avoid_caching(self):
+        pass
+
+
+    def test_user_gets_empty_response_when_downloading_image_if_assignment_is_complete(self):
+        pass
+
+
+    def test_user_gets_400_if_they_request_s3_image_that_is_not_their_assigned_item(self):
+        pass
+

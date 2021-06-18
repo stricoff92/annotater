@@ -18,7 +18,6 @@ from memetext.forms import NewTestAnnotation
 from memetext.models import S3Image, TestAnnotation
 from memetext.renderers import JPGRenderer
 from memetext.services.s3 import S3Service
-from website.utils import sanitize_token
 
 
 @api_view(['GET'])
@@ -111,7 +110,7 @@ def download_image(request, assignment_slug:str, image_slug:str):
         return Response(b"", status.HTTP_400_BAD_REQUEST)
 
     if not s3image.load_image_token_is_valid(
-        sanitize_token(request.GET.get("load_image_token")),
+        request.GET.get("load_image_token"),
         nowtz=nowtz,
     ):
         return Response(b"", status.HTTP_400_BAD_REQUEST)
