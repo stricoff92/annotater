@@ -22,5 +22,10 @@ urlpatterns = [
         api_views.download_image,
         name="memetext-api-download-image",
     ),
+    path(
+        "api/new-test-annotation",
+        api_views.add_test_annotation,
+        name="memetext-api-new-test-annotation",
+    ),
 ]
 

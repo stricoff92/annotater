@@ -11,10 +11,18 @@ from memetext.models import AssignedAnnotation
 
 class QueryService:
     def get_assigned_annotation_and_batch_from_user(self, user) -> Tuple:
-        assigned = AssignedAnnotation.objects.filter(user=user, is_active=True).first()
+        try:
+            assigned = AssignedAnnotation.objects.get(user=user, is_active=True)
+        except (
+            AssignedAnnotation.DoesNotExist,
+            AssignedAnnotation.MultipleObjectsReturned,
+        ):
+            return None, None
+
         assigned = None if assigned is None or assigned.is_complete else assigned
         batch = assigned.batch if assigned is not None else None
         return assigned, batch
+
 
     def remaining_images_user_can_annotate(self, user) -> int:
         assigned_annotation, batch = self.get_assigned_annotation_and_batch_from_user(user)

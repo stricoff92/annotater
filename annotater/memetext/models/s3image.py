@@ -87,8 +87,8 @@ class S3Image(BaseModel):
         )
 
     def annotate_image_token_is_valid(self, token: str, load_image_token: str) -> bool:
-        data = jwt.decode(token.encode(), settings.SECRET_KEY + load_image_token, "HS256")
         try:
+            data = jwt.decode(token.encode(), settings.SECRET_KEY + load_image_token, "HS256")
             if data['slug'] != self.slug:
                 raise Exception
         except Exception:

@@ -78,6 +78,7 @@ class TestAnnotation(BaseModel):
         AssignedAnnotation, on_delete=models.PROTECT,
     )
 
+    @property
     def s3_path(self) -> str:
         return f"/{self.s3_image.slug}/data-{self.slug}.json"
 

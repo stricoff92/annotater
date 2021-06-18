@@ -1,6 +1,7 @@
 
 import datetime as dt
 from io import BytesIO
+import json
 
 from django.conf import settings
 from django.utils import timezone
@@ -20,6 +21,7 @@ from memetext.forms import NewTestAnnotation
 from memetext.models import S3Image, TestAnnotation
 from memetext.renderers import JPGRenderer
 from memetext.services.s3 import S3Service
+from memetext.services.query import QueryService
 
 
 @api_view(['GET'])
@@ -81,6 +83,7 @@ def get_image_to_annotate(request, assignment_slug:str):
                 "load_image_token": load_image_token,
                 "annotate_image_token": assigned_item.get_annotate_image_token(load_image_token),
                 "url": assigned_item.get_download_image_url(assignment.slug),
+                "image_slug":assigned_item.slug,
             },
             status.HTTP_200_OK,
         )
@@ -132,3 +135,57 @@ def download_image(request, assignment_slug:str, image_slug:str):
         response = Response(fp.getvalue(), status.HTTP_200_OK)
         response['Cache-Control'] = 'no-store'
         return response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@user_can_use_memetext_api_widget
+def add_test_annotation(request):
+    form = NewTestAnnotation(request.data)
+    if not form.is_valid():
+        return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+
+    text = form.cleaned_data['text']
+    image_slug = form.cleaned_data['image_slug']
+    annotate_image_token = form.cleaned_data['annotate_image_token']
+    load_image_token = form.cleaned_data['load_image_token']
+
+    query_service = QueryService()
+    assigned_annotation, batch = query_service.get_assigned_annotation_and_batch_from_user(
+        request.user)
+    if not assigned_annotation:
+        return Response(
+            "No assignment.",
+            status.HTTP_400_BAD_REQUEST)
+
+    print(111, image_slug, batch)
+    s3image = get_object_or_404(S3Image, slug=image_slug, batch=batch)
+
+    if not s3image.annotate_image_token_is_valid(
+        annotate_image_token,
+        load_image_token,
+    ):
+        return Response(
+            "Tokens are not valid.",
+            status.HTTP_400_BAD_REQUEST)
+
+    if request.user.userprofile.assigned_item != image_slug:
+        return Response(
+            "Image not assigned.",
+            status.HTTP_400_BAD_REQUEST)
+
+
+    s3_service = S3Service()
+    test_annotation = TestAnnotation.objects.create(
+        s3_image=s3image, assigned_annotation=assigned_annotation,
+    )
+    fp = BytesIO(bytes(json.dumps({"data":text}).encode()))
+    try:
+        s3_service.upload_fp(
+            fp, settings.MEMETEXT_S3_BUCKET, test_annotation.s3_path)
+    except Exception as e:
+        test_annotation.delete()
+        print("ERROR", e)
+        return Response({}, status.HTTP_502_BAD_GATEWAY)
+    else:
+        return Response({}, status.HTTP_201_CREATED)

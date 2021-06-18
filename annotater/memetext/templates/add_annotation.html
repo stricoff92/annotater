@@ -15,6 +15,20 @@
         </div>
         <div id="image-container" style="text-align:center;" class="mt-3">
         </div>
+        <div>
+            <div
+                id="error-container"
+                style="display:none; font-size:110%; color:red; font-weight:bold; background-color:rgb(255, 213, 213);"
+                class="mt-2 p-3"
+            >
+            </div>
+            <div
+                id="success-container"
+                style="display:none; font-size:110%; color:rgb(3, 41, 0); font-weight:bold; background-color:rgb(211, 255, 193);"
+                class="mt-2 p-3"
+            >
+            </div>
+        </div>
         <div id="enter-text-container" class="mt-2">
             <div>
                 <textarea id="enter-text-input" style="width:100%;" placeholder="enter text here"></textarea>
@@ -40,6 +54,39 @@
     function getLoadImageToken(token) {
         return $("body").data("loadToken")
     }
+    function setImageSlug(slug) {
+        $("body").data("imageSlug", slug)
+    }
+    function getImageSlug() {
+        return $("body").data("imageSlug")
+    }
+    function disableSubmit() {
+        $("#submit-annotation-btn").addClass('disabled')
+    }
+    function enableSubmit() {
+        $("#submit-annotation-btn").removeClass('disabled')
+    }
+    function submitIsDisabled() {
+        return $("#submit-annotation-btn").hasClass('disabled')
+    }
+    function resetErrors(){
+        $("#error-container").slideUp(60, ()=>{
+            $("#error-container").html("")
+        })
+    }
+    function setErrors(errorString){
+        $("#error-container").text(errorString)
+        $("#error-container").slideDown(100)
+    }
+    function resetSuccessMsg(){
+        $("#success-container").slideUp(60, ()=>{
+            $("#success-container").html("")
+        })
+    }
+    function setSuccessMsg(successString){
+        $("#success-container").text(successString)
+        $("#success-container").slideDown(100)
+    }
     $(document).ready(()=>{
         const url = "/memetext/api/get-image/{{ assigned.slug }}"
         $.get(url, (success, status, xhr)=>{
@@ -47,8 +94,10 @@
                 const url = xhr.responseJSON.url
                 const annotateImageToken = xhr.responseJSON.annotate_image_token
                 const loadImageToken = xhr.responseJSON.load_image_token
+                const imageSlug = xhr.responseJSON.image_slug
                 setAnnotateImageToken(annotateImageToken)
                 setLoadImageToken(loadImageToken)
+                setImageSlug(imageSlug)
 
                 const imgElem = document.createElement("img")
                 imgElem.setAttribute("src", url + "?t=" + loadImageToken)
@@ -58,6 +107,42 @@
             } else if (xhr.status == 204) {
                 window.location = "/memetext/"
             }
+        })
+        $("#submit-annotation-btn").click(()=>{
+            if (submitIsDisabled()) {
+                return
+            }
+            disableSubmit()
+            resetErrors()
+            const text = $("#enter-text-input").val().trim()
+            if (!text.length) {
+                if (!confirm("No text entered. Are you sure you want to submit an empty text box?")) {
+                    enableSubmit()
+                    return
+                }
+            }
+            const url = "{% url 'memetext-api-new-test-annotation' %}"
+            const data = {
+                text,
+                image_slug: getImageSlug(),
+                annotate_image_token: getAnnotateImageToken(),
+                load_image_token: getLoadImageToken(),
+            }
+            postJson(url, data,
+                (success, status, xhr)=>{
+                    if (xhr.status == 201) {
+                        setSuccessMsg("✅ Success, redirecting....")
+                        setTimeout(()=>{
+                            location.reload()
+                        }, 750)
+                    } else {
+                        setErrors("Something went wrong. Please refresh.")
+                    }
+                },
+                (success, status, xhr)=>{
+                    setErrors(":( Something went wrong. Please refresh.")
+                },
+            )
         })
     })
 </script>

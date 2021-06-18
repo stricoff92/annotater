@@ -23,6 +23,7 @@ class S3Service:
 
 
     def upload_fp(self, fp:BinaryIO, bucket:str, s3_path:str):
+        fp.seek(0)
         return self._get_boto_client().upload_fileobj(fp, bucket, s3_path)
 
 

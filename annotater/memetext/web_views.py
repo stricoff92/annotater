@@ -34,10 +34,12 @@ def add_annotation(request):
     """
     service = QueryService()
     assigned, batch = service.get_assigned_annotation_and_batch_from_user(request.user)
+    remaining_annotations = service.remaining_images_user_can_annotate(request.user)
     if assigned is None:
         return redirect("memetext-web-landing")
     context = {
         "assigned": assigned,
         "batch": batch,
+        "remaining_count":remaining_annotations,
     }
     return render(request, "add_annotation.html", context)

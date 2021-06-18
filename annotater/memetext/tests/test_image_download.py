@@ -27,14 +27,14 @@ class TestImageDownload(BaseTestCase):
 
         self.downloaded_fp = BytesIO(b"Hello world!")
         self.downloaded_fp.seek(0)
-        self.mock_s3_service = mock.patch.object(
+        self.mock_s3_download = mock.patch.object(
             S3Service,
             "download_object_to_fp",
             return_value=self.downloaded_fp,
         ).start()
 
     def tearDown(self):
-        self.mock_s3_service.stop()
+        self.mock_s3_download.stop()
         super().tearDown()
 
 
@@ -70,8 +70,9 @@ class TestImageDownload(BaseTestCase):
 
         response = self.client.get(url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(set(response.data.keys()), set(['load_image_token', 'url', 'annotate_image_token']))
+        self.assertEquals(set(response.data.keys()), set(['load_image_token', 'url', 'annotate_image_token', 'image_slug']))
         self.assertEquals(response.data['url'], self.s3image.get_download_image_url(annotation_assignment.slug))
+        self.assertEquals(response.data['image_slug'], self.s3image.slug)
 
 
     def test_user_is_given_the_same_assigned_item(self):
@@ -306,6 +307,24 @@ class TestImageDownload(BaseTestCase):
         response = self.client.get(url + "?t=" + get_image_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue('image/jpeg' in response.headers['Content-Type'])
+
+
+    def test_image_is_downloaded_from_s3(self):
+        self.client.force_login(self.user)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        get_image_token = self.s3image.get_load_image_token()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.mock_s3_download.assert_called_once_with(
+            settings.MEMETEXT_S3_BUCKET, self.s3image.s3_path)
+        self.assertEquals(response.data, b"Hello world!")
 
 
     def test_headers_are_sent_to_avoid_caching(self):
