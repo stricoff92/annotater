@@ -27,6 +27,7 @@ class S3Service:
 
 
     def download_object_to_fp(self, bucket:str, s3_path:str) -> BinaryIO:
+        print(bucket, s3_path)
         fp = BytesIO()
         self._get_boto_client().download_fileobj(bucket, s3_path, fp)
         return fp

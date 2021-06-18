@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block 'body' %}
+<style>
+</style>
+<div class="mb-5">
+    <div id="add-annotation-container">
+        <div class="card mt-3">
+            <span class="alert alert-info">Instructions</span>
+            <div class="card-body pt-2 pb-3 pl-3 pr-3">
+                {{ batch.instructions|safe }}
+            </div>
+        </div>
+        <div id="image-container" style="text-align:center;" class="mt-3">
+        </div>
+        <div id="enter-text-container" class="mt-2">
+            <div>
+                <textarea id="enter-text-input" style="width:100%;" placeholder="enter text here"></textarea>
+            </div>
+            <div>
+                <button id="submit-annotation-btn" class="btn btn-primary">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function setAnnotateImageToken(token) {
+        $("body").data("annotateToken", token)
+    }
+    function getAnnotateImageToken(token) {
+        return $("body").data("annotateToken")
+    }
+    function setLoadImageToken(token) {
+        $("body").data("loadToken", token)
+    }
+    function getLoadImageToken(token) {
+        return $("body").data("loadToken")
+    }
+    $(document).ready(()=>{
+        const url = "/memetext/api/get-image/{{ assigned.slug }}"
+        $.get(url, (success, status, xhr)=>{
+            if (xhr.status == 200) {
+                const url = xhr.responseJSON.url
+                const annotateImageToken = xhr.responseJSON.annotate_image_token
+                const loadImageToken = xhr.responseJSON.load_image_token
+                setAnnotateImageToken(annotateImageToken)
+                setLoadImageToken(loadImageToken)
+
+                const imgElem = document.createElement("img")
+                imgElem.setAttribute("src", url + "?t=" + loadImageToken)
+                $(imgElem).css({'max-width':'80vw', 'max-height':'80vh', 'border':'5px dashed red'})
+                $("#image-container").html(imgElem)
+
+            } else if (xhr.status == 204) {
+                window.location = "/memetext/"
+            }
+        })
+    })
+</script>
+{% endblock %}

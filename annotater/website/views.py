@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.http import require_safe
 from django.contrib.auth import login, logout
+from django.conf import settings
 
 from website.utils import get_user_from_login_token
 from website.constants import WIDGET_NAMES
@@ -26,7 +27,7 @@ def login_with_magic_link(request):
     if not token:
         return HttpResponseBadRequest()
     user = get_user_from_login_token(token)
-    if not user or user.is_superuser:
+    if not user or (not settings.DEBUG and user.is_superuser):
         return HttpResponseBadRequest()
     login(request, user)
     return redirect("anon-landing")

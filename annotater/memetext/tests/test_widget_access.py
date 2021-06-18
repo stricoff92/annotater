@@ -23,4 +23,4 @@ class TestWidgetAccess(BaseTestCase):
         response = self.client.get(reverse("memetext-web-landing"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(reverse("memetext-web-add-annotation"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)

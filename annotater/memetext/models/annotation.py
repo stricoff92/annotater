@@ -1,4 +1,5 @@
 
+import datetime as dt
 from decimal import Decimal
 import json
 from typing import Dict
@@ -10,6 +11,7 @@ from django.db.models import Sum
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.forms import ValidationError
+from django.utils import timezone
 
 
 class AssignedAnnotation(BaseModel):
@@ -24,13 +26,21 @@ class AssignedAnnotation(BaseModel):
     assigned_count = models.PositiveIntegerField()
     is_active = models.BooleanField(default=True)
 
+    def __str__(self):
+        return f"Assignment [active:{self.is_active}] {self.user.username} (ct:{self.assigned_count})"
+
     @property
     def completed_count(self) -> int:
         return self.testannotation_set.count()
 
+
     @property
     def is_complete(self) -> bool:
-        return self.completed_count >= self.assigned_count
+        return (
+            self.completed_count >= self.assigned_count
+            or self.batch.remainder_to_be_annotated_including_items_assigned_to_user(self.user) == 0
+        )
+
 
     @property
     def payout_amount(self) -> Decimal:
@@ -69,9 +79,7 @@ class TestAnnotation(BaseModel):
     )
 
     def s3_path(self) -> str:
-        return f"{settings.MEMETEXT_S3_BUCKET}/{self.s3_image.slug}/data-{self.slug}.json"
-
-
+        return f"/{self.s3_image.slug}/data-{self.slug}.json"
 
 
 class ControlAnnotation(BaseModel):

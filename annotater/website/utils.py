@@ -26,7 +26,7 @@ def get_login_token(user):
 
 def get_user_from_login_token(token: str):
     try:
-        claims = jwt.decode(token, settings.SECRET_KEY, "HS256")
+        claims = jwt.decode(token.encode(), settings.SECRET_KEY, "HS256")
         if datetime_parser.parse(claims['expires_at']) < timezone.now():
             return None
         if datetime_parser.parse(claims['created_at']) > timezone.now():

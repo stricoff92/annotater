@@ -2,6 +2,7 @@
 import datetime as dt
 from io import BytesIO
 
+from django.conf import settings
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -12,6 +13,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAdminUser,
 )
+from botocore.exceptions import ClientError
 
 from memetext.decorators import user_can_use_api_widget as user_can_use_memetext_api_widget
 from memetext.forms import NewTestAnnotation
@@ -100,6 +102,7 @@ def download_image(request, assignment_slug:str, image_slug:str):
         slug=assignment_slug,
     )
     if assignment.is_complete:
+        print("111 complete")
         return Response(b"", status.HTTP_400_BAD_REQUEST)
 
     s3image = get_object_or_404(
@@ -107,19 +110,28 @@ def download_image(request, assignment_slug:str, image_slug:str):
         slug=image_slug)
 
     if s3image.slug != user.userprofile.assigned_item:
+        print("222 not assigned")
         return Response(b"", status.HTTP_400_BAD_REQUEST)
 
     if not s3image.load_image_token_is_valid(
-        request.GET.get("load_image_token"),
+        request.GET.get("t"),
         nowtz=nowtz,
     ):
+        print("333 token not valid")
         return Response(b"", status.HTTP_400_BAD_REQUEST)
     else:
         service = S3Service()
-        fp = service.download_object_to_fp(
-            settings.MEMETEXT_S3_BUCKET,
-            s3image.s3_path,
-        )
+        try:
+            fp = service.download_object_to_fp(
+                settings.MEMETEXT_S3_BUCKET,
+                s3image.s3_path,
+            )
+        except ClientError as e:
+            if "404" in str(e):
+                return Response(b"", status.HTTP_404_NOT_FOUND)
+            else:
+                raise
+
         response = Response(fp.getvalue(), status.HTTP_200_OK)
         response['Cache-Control'] = 'no-store'
         return response

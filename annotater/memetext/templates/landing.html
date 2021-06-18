@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block 'body' %}
+<style>
+    #continue-annotating-alert {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+</style>
+<div>
+    {% if assignment and not assignment.is_complete and remaining_annotations > 0 %}
+        <div class="card mt-3">
+            <span id="continue-annotating-alert" class="alert alert-primary">
+                🕬 You Have Assigned Annotations
+            </span>
+            <div class="card-body">
+                <div>
+                    {{ batch.batch_message|safe }}
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" id="continue-btn"><strong>Continue</strong></button>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="mt-4">
+            <span class="alert alert-secondary">
+                <i>No Annotations Assigned</i>
+            </span>
+        </div>
+    {% endif %}
+    <hr>
+    <div class="card">
+        <div class="card-header">
+            All Assigned Annotations
+        </div>
+        <div class="card-body">
+
+            {% for a in all_assigned %}
+                <div class="card pl-2">
+                    <div style="font-size:125%;" class="mb-2 mt-2">
+                        Invoice Number: {{ a.invoice_id }}
+                    </div>
+                    <div>
+                        <strong>Is Active:</strong> {% if a.is_active %}Yes{% else %}No{% endif %}
+                    </div>
+                    <div>
+                        <strong>Date:</strong> {{ a.created_at }}
+                    </div>
+                    <div>
+                        <strong>Assinged Count:</strong> {{ a.assigned_count }}
+                    </div>
+                    <div>
+                        <strong>Completed Count:</strong> {{ a.completed_count }}
+                    </div>
+                    <div>
+                        <strong>Is Complete:</strong> {% if a.is_complete %}Yes{% else %}No{% endif %}
+                    </div>
+                    <div>
+                        <strong>Payout Rate:</strong> {{ a.payout_rate.rate }}
+                    </div>
+                    <div>
+                        <strong>Total Payout Amount:</strong> {{ a.payout_amount }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Paid:</strong> {{ a.paid_amount }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+    </div>
+
+</div>
+<script>
+    $(document).ready(()=>{
+        $("#continue-btn").click(()=>{
+            window.location = "{% url 'memetext-web-add-annotation' %}"
+        })
+    })
+</script>
+{% endblock %}
