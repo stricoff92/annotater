@@ -56,7 +56,7 @@ def get_image_to_annotate(request, assignment_slug:str):
 
     new = False
     if assigned_item is None:
-        five_mins_ago = timezone.now() - dt.timedelta(minutes=10)
+        five_mins_ago = timezone.now() - dt.timedelta(minutes=5)
         s3image_ids_with_test_annotations = (TestAnnotation.objects
             .filter(s3_image__batch=assignment.batch)
             .values_list("s3_image_id", flat=True))
@@ -72,6 +72,8 @@ def get_image_to_annotate(request, assignment_slug:str):
             user.userprofile.assigned_item = assigned_item.slug
             user.userprofile.save()
 
+        assigned_item.last_assigned = timezone.now()
+        assigned_item.save(update_fields=['last_assigned'])
         load_image_token = assigned_item.get_load_image_token()
         return Response(
             {
