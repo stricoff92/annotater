@@ -1,5 +1,6 @@
 
 applocals.py
+*.ipynb
 
 # Django #
 *.log

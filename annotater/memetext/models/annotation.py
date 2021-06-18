@@ -46,6 +46,8 @@ class AssignedAnnotation(BaseModel):
         return self.slug[:8]
 
 
+
+
 class TestAnnotation(BaseModel):
     s3_image = models.ForeignKey(
         "memetext.S3Image", on_delete=models.PROTECT)
@@ -56,6 +58,8 @@ class TestAnnotation(BaseModel):
 
     def s3_path(self) -> str:
         return f"{settings.MEMETEXT_S3_BUCKET}/{self.s3_image.slug}/data.json"
+
+
 
 
 class ControlAnnotation(BaseModel):

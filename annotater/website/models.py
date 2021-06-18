@@ -11,6 +11,11 @@ class UserProfile(models.Model):
     )
     assigned_widgets = models.TextField()
 
+    assigned_item = models.CharField(
+        max_length=100, blank=True, null=True, default=None)
+
+    def __str__(self):
+        return "UserProfile for " + str(self.user)
 
     def can_use_widget(self, name:str) -> bool:
         return name in self.assigned_widgets

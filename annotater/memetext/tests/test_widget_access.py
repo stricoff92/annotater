@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from memetext.tests.base import BaseTestCase
-
+from website.constants import WIDGET_NAMES
 
 class TestWidgetAccess(BaseTestCase):
 
@@ -17,7 +17,7 @@ class TestWidgetAccess(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_user_with_assigned_widget_gets_200_response(self):
-        self.user.userprofile.assigned_widgets = "memetext"
+        self.user.userprofile.assigned_widgets = WIDGET_NAMES.memetext
         self.user.userprofile.save()
         self.client.force_login(self.user)
         response = self.client.get(reverse("memetext-web-landing"))

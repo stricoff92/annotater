@@ -1,4 +1,6 @@
 
+from typing import BinaryIO
+
 from django.conf import settings
 import boto3
 
@@ -17,3 +19,16 @@ class S3Service:
 
     def _get_boto_client(self):
         return self._boto_client
+
+
+    def upload_fp(self, fp:BinaryIO, bucket:str, s3_path:str):
+        return self._get_boto_client().upload_fileobj(fp, bucket, s3_path)
+
+
+    def download_object_to_fp(self, bucket:str, s3_path:str, fp:BinaryIO):
+        return self._get_boto_client().download_fileobj(bucket, s3_path, fp)
+
+
+    def delete_objects_with_keys(self, bucket:str, s3_keys:list):
+        data = {'Objects':[{'Key': k} for k in s3_keys]}
+        return self._get_boto_client().delete_objects(Bucket=bucket, Delete=data)

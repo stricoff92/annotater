@@ -14,6 +14,7 @@ class S3Image(BaseModel):
         on_delete=models.PROTECT)
 
     file_extension = models.CharField(max_length=4)
+    last_assigned = models.DateTimeField(blank=True, null=True, default=None)
 
 
     def s3_path(self) -> str:
