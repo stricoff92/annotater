@@ -36,6 +36,9 @@ SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
 
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30 # (30 days)
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -148,6 +151,9 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+LOGIN_URL = "/"
 
 
 # Static files (CSS, JavaScript, Images)

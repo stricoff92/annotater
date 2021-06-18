@@ -1,6 +1,8 @@
 
+from io import BytesIO
 from decimal import Decimal
 from dateutil import parser as dateutil_parser
+from unittest import mock
 
 from django.urls import reverse
 from rest_framework import status
@@ -10,6 +12,7 @@ from freezegun import freeze_time
 
 from .base import BaseTestCase
 from website.constants import WIDGET_NAMES
+from memetext.services.s3 import S3Service
 
 
 class TestImageDownload(BaseTestCase):
@@ -21,6 +24,19 @@ class TestImageDownload(BaseTestCase):
         self.rate = self.create_payout_rate(Decimal("0.1"))
         self.batch = self.create_annotation_batch()
         self.s3image = self.create_s3_image(self.batch)
+
+        self.downloaded_fp = BytesIO(b"Hello world!")
+        self.downloaded_fp.seek(0)
+        self.mock_s3_service = mock.patch.object(
+            S3Service,
+            "download_object_to_fp",
+            return_value=self.downloaded_fp,
+        ).start()
+
+    def tearDown(self):
+        self.mock_s3_service.stop()
+        super().tearDown()
+
 
     # GET IMAGE ROUTE
 
@@ -217,11 +233,13 @@ class TestImageDownload(BaseTestCase):
 
 
     @freeze_time("2020-05-17T14:17:30+00:00")
-    def test_user_cannot_download_if_last_assigned_is_recent(self):
+    def test_user_cannot_download_if_last_assigned_is_recent_and_s3_image_is_not_the_users_assigned_item(self):
         self.client.force_login(self.user)
         annotation_assignment = self.create_assigned_annotation(self.batch)
         self.s3image.last_assigned = dateutil_parser.parse("2020-05-17T14:17:27+00:00")
         self.s3image.save()
+        self.user.userprofile.assigned_item = "foobar"
+        self.user.userprofile.save()
         url = reverse(
             "memetext-api-get-image",
             kwargs={"assignment_slug":annotation_assignment.slug})
@@ -235,24 +253,109 @@ class TestImageDownload(BaseTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
+    @freeze_time("2020-05-17T14:17:30+00:00")
+    def test_user_can_download_if_last_assigned_is_recent_and_s3_image_is_the_users_assigned_item(self):
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        self.s3image.last_assigned = dateutil_parser.parse("2020-05-17T14:17:27+00:00")
+        self.s3image.save()
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+        url = reverse(
+            "memetext-api-get-image",
+            kwargs={"assignment_slug":annotation_assignment.slug})
+
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+
     # DOWNLOAD IMAGE ROUTE
 
-    def test_user_must_be_authenticated_to_download_image(self):
-        pass
+    def test_anon_user_cant_download_image(self):
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-    def test_user_can_download_image(self):
-        pass
+    def test_user_cant_download_without_sending_token(self):
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_user_can_download_by_including_download_token(self):
+        self.client.force_login(self.user)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        get_image_token = self.s3image.get_load_image_token()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('image/jpeg' in response.headers['Content-Type'])
 
 
     def test_headers_are_sent_to_avoid_caching(self):
-        pass
+        self.client.force_login(self.user)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        get_image_token = self.s3image.get_load_image_token()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('no-store' in response.headers['Cache-Control'])
 
 
     def test_user_gets_empty_response_when_downloading_image_if_assignment_is_complete(self):
-        pass
+        self.client.force_login(self.user)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+
+        annotation_assignment = self.create_assigned_annotation(self.batch, assigned_count=0)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        get_image_token = self.s3image.get_load_image_token()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        annotation_assignment.assigned_count = 1
+        annotation_assignment.save()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
     def test_user_gets_400_if_they_request_s3_image_that_is_not_their_assigned_item(self):
-        pass
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        url = reverse("memetext-api-download-image", kwargs={
+            "assignment_slug":annotation_assignment.slug,
+            "image_slug":self.s3image.slug,
+        })
+        get_image_token = self.s3image.get_load_image_token()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+        response = self.client.get(url + "?t=" + get_image_token)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)

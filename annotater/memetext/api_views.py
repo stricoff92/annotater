@@ -102,7 +102,6 @@ def download_image(request, assignment_slug:str, image_slug:str):
         slug=assignment_slug,
     )
     if assignment.is_complete:
-        print("111 complete")
         return Response(b"", status.HTTP_400_BAD_REQUEST)
 
     s3image = get_object_or_404(
@@ -110,14 +109,12 @@ def download_image(request, assignment_slug:str, image_slug:str):
         slug=image_slug)
 
     if s3image.slug != user.userprofile.assigned_item:
-        print("222 not assigned")
         return Response(b"", status.HTTP_400_BAD_REQUEST)
 
     if not s3image.load_image_token_is_valid(
         request.GET.get("t"),
         nowtz=nowtz,
     ):
-        print("333 token not valid")
         return Response(b"", status.HTTP_400_BAD_REQUEST)
     else:
         service = S3Service()

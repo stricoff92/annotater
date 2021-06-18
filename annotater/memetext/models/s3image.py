@@ -70,7 +70,6 @@ class S3Image(BaseModel):
             if data['slug'] != self.slug:
                 raise Exception
         except Exception as e:
-            print("error ", e)
             return False
         return True
 
