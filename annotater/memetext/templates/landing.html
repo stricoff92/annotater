@@ -15,10 +15,29 @@
             </span>
             <div class="card-body">
                 <div>
-                    {{ batch.batch_message|safe }}
+                    <div>
+                        {{ batch.batch_message|safe }}
+                    </div>
+                    {% if not batch.batch_message_expanded %}
+                        <div class="mt-3">
+                            <button class="btn btn-primary continue-btn"><strong>Continue</strong></button>
+                        </div>
+                    {% else %}
+                        <div id="more-text-to-show-hint">
+                            ...
+                        </div>
+                        <div id="expand-batch-instructions-btn-container" class="mt-3">
+                            <button class="btn btn-primary" id="expand-batch-instructions-btn">
+                                <strong>Continue</strong>
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="mt-3">
-                    <button class="btn btn-primary" id="continue-btn"><strong>Continue</strong></button>
+                <div id="expanded-section" style="display:none">
+                    {{ batch.batch_message_expanded|safe }}
+                    <div class="mt-3">
+                        <button class="btn btn-primary continue-btn"><strong>Continue</strong></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,8 +111,13 @@
 </div>
 <script>
     $(document).ready(()=>{
-        $("#continue-btn").click(()=>{
+        $(".continue-btn").click(()=>{
             window.location = "{% url 'memetext-web-add-annotation' %}"
+        })
+        $("#expand-batch-instructions-btn").click(()=>{
+            $("#expand-batch-instructions-btn-container").hide()
+            $("#more-text-to-show-hint").hide()
+            $("#expanded-section").slideDown(200)
         })
     })
 </script>

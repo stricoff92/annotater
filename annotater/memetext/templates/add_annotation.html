@@ -9,8 +9,14 @@
             <span class="alert alert-info">
                 <strong>Instructions</strong>
             </span>
-            <div class="card-body pt-2 pb-3 pl-3 pr-3">
+            <div class="card-body pt-2 pl-3 pr-3 pb-2">
                 {{ batch.instructions|safe }}
+                {% if batch.instructions_expanded %}
+                    <button id="show-more-btn" class="btn btn-secondary">show more</button>
+                    <div id="hidden-instructions" style="display:none;">
+                        {{ batch.instructions_expanded|safe }}
+                    </div>
+                {% endif %}
             </div>
         </div>
         <div id="image-container" style="text-align:center;" class="mt-3">
@@ -148,6 +154,10 @@
                     setErrors(":( Something went wrong. Please refresh.")
                 },
             )
+        })
+        $("#show-more-btn").click(()=>{
+            $("#show-more-btn").hide()
+            $("#hidden-instructions").slideDown()
         })
     })
 </script>
