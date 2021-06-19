@@ -31,11 +31,16 @@
     {% endif %}
     <hr>
     {% if user.is_superuser %}
-        <div class="alert alert-primary mt-3" style="font-size:125%; font-weight:bold;">
+        <div class="alert alert-primary mt-3" style="font-size:105%; font-weight:bold;">
+            <h4><u>Admin Panel</u></h4>
             📊
             <a href="{% url 'memetext-web-add-control-annotation' %}">
                 Create Control Annotations
-            </a>
+            </a><br>
+            🗂️
+            <a href="{% url 'memetext-annotation-audit' %}">
+                View Annotation Audit Report
+            </a><br>
         </div>
     {% endif %}
     <div class="card">

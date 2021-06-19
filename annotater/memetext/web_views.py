@@ -1,10 +1,13 @@
 
+import json
 from typing import Tuple
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Q
+from django.urls import reverse
+import Levenshtein
 
 from memetext.models import AssignedAnnotation, AnnotationBatch, S3Image, ControlAnnotation, TestAnnotation
 from memetext.decorators import user_can_use_web_widget
@@ -56,9 +59,14 @@ def add_control_annotation(request):
         return redirect("memetext-web-landing")
 
     batch_slug = request.GET.get("batch_slug")
+    base_url = reverse('memetext-web-add-control-annotation')
     if not batch_slug:
         batches = AnnotationBatch.objects.order_by("-created_at")
-        return render(request, "select_batch.html", {'batches': batches})
+        return render(
+            request,
+            "select_batch.html",
+            {'batches': batches, 'base_url':base_url, 'page_title':'NewControl Annotation: Select a Batch'}
+        )
 
     batch = get_object_or_404(AnnotationBatch, slug=batch_slug)
     s3images = S3Image.objects.filter(batch=batch)
@@ -66,6 +74,7 @@ def add_control_annotation(request):
     s3_images_with_test = TestAnnotation.objects.filter(s3_image__batch=batch).values_list("s3_image_id", flat=True)
     filtered_image_qs = s3images.filter(Q(id__in=s3_images_with_test) & ~Q(id__in=s3_images_with_control))
     found = True
+    # TODO: test this logic
     if not filtered_image_qs.exists():
         filtered_image_qs = s3images.filter(~Q(id__in=s3_images_with_control))
         if not filtered_image_qs.exists():
@@ -78,3 +87,80 @@ def add_control_annotation(request):
         's3_image':target_s3_image,
     }
     return render(request, "add_control_annotation.html", context)
+
+
+@login_required
+@user_can_use_web_widget
+def view_annotation_audit(request):
+    if not request.user.is_superuser:
+        return redirect("memetext-web-landing")
+
+    batch_slug = request.GET.get("batch_slug")
+    base_url = reverse('memetext-annotation-audit')
+    if not batch_slug:
+        batches = AnnotationBatch.objects.order_by("-created_at")
+        return render(
+            request,
+            "select_batch.html",
+            {'batches': batches, 'base_url':base_url, 'page_title':'Annotation Audit Report: Select a Batch'}
+        )
+
+    query_service = QueryService()
+    batch = get_object_or_404(AnnotationBatch, slug=batch_slug)
+    s3_images = S3Image.objects.filter(batch=batch)
+    test_annotations = TestAnnotation.objects.filter(s3_image__in=s3_images)
+    control_annotations = ControlAnnotation.objects.filter(s3_image__in=s3_images)
+
+    overlapping_s3_ids = set(s3_images.values_list("id", flat=True))
+    overlapping_s3_ids = overlapping_s3_ids.union(set(test_annotations.values_list("s3_image_id", flat=True)))
+    overlapping_s3_ids = overlapping_s3_ids.union(set(control_annotations.values_list("s3_image_id", flat=True)))
+
+    s3_images = s3_images.filter(id__in=overlapping_s3_ids)
+    test_annotations = test_annotations.filter(s3_image__in=s3_images)
+    control_annotations = control_annotations.filter(s3_image__in=s3_images)
+
+    s3_image_id_to_control_annotation_map = {}
+    for ca in control_annotations:
+        s3_image_id_to_control_annotation_map[ca.s3_image_id] = ca
+
+    def _sanitize(s):
+        return s.lower().replace(" ", "")
+
+    def _get_flag(rr, sr):
+        if rr >= 0.99:
+            return "💯"
+        if sr < 0.90:
+            return "⚠️"
+        if sr >= 0.98:
+            return "✅"
+        return ""
+
+    report_rows = []
+    for test_annotation in test_annotations.values(
+        "assigned_annotation__user__username", "s3_image_id", "s3_image__slug", "data", "created_at"
+    ):
+        username = test_annotation['assigned_annotation__user__username']
+        test_text = json.loads(test_annotation['data'])['data'] if test_annotation['data'] else ""
+        s3_image_id = test_annotation['s3_image_id']
+        s3_image_slug = test_annotation['s3_image__slug']
+        control_annotation = s3_image_id_to_control_annotation_map[s3_image_id]
+        control_text = control_annotation.get_data().get("data", "")
+
+
+        raw_ratio = Levenshtein.ratio(control_text, test_text)
+        sanitized_ratio = Levenshtein.ratio(_sanitize(control_text), _sanitize(test_text))
+
+        report_rows.append({
+            's3_image_slug': s3_image_slug,
+            'test_completed_by': username,
+            'test_completed_at': test_annotation['created_at'],
+            'raw_ratio': raw_ratio,
+            'sanitized_ratio': sanitized_ratio,
+            'flag': _get_flag(raw_ratio, sanitized_ratio),
+            'test_text': test_text,
+            'control_text': control_text,
+        })
+
+    report_rows.sort(key=lambda r: r['sanitized_ratio'])
+    context = {'report_rows': report_rows, 'batch':batch}
+    return render(request, "annotation_audit_report.html", context)

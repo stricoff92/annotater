@@ -72,7 +72,21 @@ class AssignedAnnotation(BaseModel):
         return super().save(*a, **k)
 
 
-class TestAnnotation(BaseModel):
+
+class BaseAnnotation(BaseModel):
+    data = models.TextField(blank=True, null=True, default=None)
+
+    def get_data(self) -> Dict:
+        if self.data is not None:
+            return json.loads(self.data)
+        else:
+            return {}
+
+    class Meta:
+        abstract = True
+
+
+class TestAnnotation(BaseAnnotation):
     """ Instance of a user provided annotation of an s3_image.
     """
     s3_image = models.ForeignKey(
@@ -87,16 +101,8 @@ class TestAnnotation(BaseModel):
         return f"/{self.s3_image.slug}/data-{self.slug}.json"
 
 
-class ControlAnnotation(BaseModel):
+class ControlAnnotation(BaseAnnotation):
     """ Expected value a TestAnnotation's data
     """
     s3_image = models.OneToOneField(
         "memetext.S3Image", on_delete=models.PROTECT)
-
-    data = models.TextField(blank=True, null=True, default=None)
-
-    def get_data(self) -> Dict:
-        if self.data is not None:
-            return json.loads(self.data)
-        else:
-            return {}

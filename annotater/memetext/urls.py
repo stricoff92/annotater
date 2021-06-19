@@ -11,6 +11,7 @@ urlpatterns = [
     path("", web_views.landing, name="memetext-web-landing"),
     path("add-annotation", web_views.add_annotation, name="memetext-web-add-annotation"),
     path("add-control-annotation", web_views.add_control_annotation, name="memetext-web-add-control-annotation"),
+    path("annotation-audit-report", web_views.view_annotation_audit, name="memetext-annotation-audit"),
 
     # api views
 

@@ -176,7 +176,9 @@ def add_test_annotation(request):
 
     s3_service = S3Service()
     test_annotation = TestAnnotation.objects.create(
-        s3_image=s3image, assigned_annotation=assigned_annotation,
+        s3_image=s3image,
+        assigned_annotation=assigned_annotation,
+        data=json.dumps({"data":text}),
     )
     fp = BytesIO(bytes(json.dumps({"data":text}).encode()))
     try:

@@ -49,6 +49,16 @@ class TestNewControlAnnotation(BaseTestCase):
         self.assertEquals(response.status_code, status.HTTP_409_CONFLICT)
 
 
+    def test_admin_cant_create_control_annotation_for_image_that_does_not_exist(self):
+        self.client.force_login(self.admin_user)
+        data = {
+            'image_slug': self.s3image.slug + "fffffff",
+            'text': 'fooo baar'
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
     def test_admin_can_create_control_annotation(self):
         self.client.force_login(self.admin_user)
         data = {

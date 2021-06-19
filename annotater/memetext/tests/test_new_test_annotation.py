@@ -202,6 +202,7 @@ class TestNewTestAnnotation(BaseTestCase):
         self.assertEquals(TestAnnotation.objects.count(), 1)
         ta = TestAnnotation.objects.first()
         self.assertEquals(ta.s3_image, self.s3image)
+        self.assertEquals(ta.get_data(), {'data': 'hello world'})
 
 
     def test_users_assigned_item_is_set_to_null_after_uploading_a_new_test_annotation(self):
