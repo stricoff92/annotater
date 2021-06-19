@@ -23,5 +23,4 @@ class UserProfile(models.Model):
         return "UserProfile for " + str(self.user)
 
     def can_use_widget(self, name:str) -> bool:
-        return name in self.assigned_widgets
         return self.user.is_superuser or name in self.assigned_widgets

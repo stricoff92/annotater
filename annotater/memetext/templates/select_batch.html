@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block 'body' %}
+    <div class="mt-4 mb-3">
+        <h2>Control Annotation: Select a Batch</h2>
+    </div>
+    <ul>
+    {% for b in batches %}
+        <li>
+            <a href="{% url 'memetext-web-add-control-annotation' %}?batch_slug={{ b.slug }}">
+                {{ b.created_at }} <strong>{{ b.name }}</strong> (image count {{ b.s3image_set.all.count }})
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}

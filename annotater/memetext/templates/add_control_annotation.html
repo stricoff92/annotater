@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block 'body' %}
+<div>
+{% if not s3_image %}
+    <div class="alert alert-warning">
+        <strong>
+            No images to annotate.
+        </strong>
+    </div>
+{% else %}
+    <div class="mt-3 ml-2">
+        <h2>Add Control Annotation</h2>
+    </div>
+    <div class="card mt-3">
+        <div class="card-header">
+            <strong>Batch <i>{{ s3_image.batch.name }}</i> Instructions</strong>
+        </div>
+        <div class="card-body">
+            <div></div>
+                {{ s3_image.batch.instructions }}
+        </div>
+    </div>
+    <div class="mt-3 text-center">
+        <img
+            src="{% url 'memetext-api-admin-download-image' s3_image.slug %}"
+            style="border:5px dashed red; max-width:80vw; max-height:80vh;"
+        >
+    </div>
+    <div style="display:none" id="success-msg" class="alert alert-success mt-3">
+        ☑️  Control Annotation Created
+    </div>
+    <div class="mt-3">
+        <textarea id="enter-text-input" placeholder="enter text here" style="width:100%"></textarea>
+    </div>
+    <div>
+        <button id="submit-control-annotation-btn" class="btn btn-primary">
+            <strong>Submit</strong>
+        </button>
+    </div>
+
+    <div class="mb-5"></div>
+    <script>
+        function submitIsDisabled() {
+            return $("#submit-control-annotation-btn").hasClass('disabled')
+        }
+        function disableForm() {
+            $("#submit-control-annotation-btn").addClass('disabled')
+            $("#enter-text-input").prop('disabled', true)
+        }
+        function enableForm() {
+            $("#submit-control-annotation-btn").removeClass('disabled')
+            $("#enter-text-input").prop('disabled', false);
+        }
+        function setSuccessMsg() {
+            $("#success-msg").slideDown(100)
+        }
+        $(document).ready(()=>{
+            $("#submit-control-annotation-btn").click(()=>{
+                if (submitIsDisabled()) {
+                    return
+                }
+                disableForm()
+                const text = $("#enter-text-input").val().trim()
+                if (!text.length) {
+                    if (!confirm("No text entered. Are you sure you want to submit an empty text box?")) {
+                        enableForm()
+                        return
+                    }
+                }
+                const url = "{% url 'memetext-api-new-control-annotation' %}"
+                const data = {
+                    text,
+                    image_slug: "{{ s3_image.slug }}",
+                }
+                postJson(url, data,
+                    (success, status, xhr)=>{
+                        if (xhr.status == 201) {
+                            console.log(xhr)
+                            setSuccessMsg()
+                            setTimeout(()=>{
+                                location.reload()
+                            }, 1200)
+                        } else {
+                            alert("Something went wrong. Please refresh.")
+                        }
+                    },
+                    (success, status, xhr)=>{
+                        alert(":( Something went wrong. Please refresh.")
+                    },
+                )
+
+            })
+        })
+    </script>
+{% endif %}
+</div>
+{% endblock %}

@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.contrib.auth.models import AnonymousUser, User
 
 from website.models import UserProfile
-from memetext.models import AnnotationBatch, AssignedAnnotation, S3Image, PayoutRate, TestAnnotation
+from memetext.models import AnnotationBatch, AssignedAnnotation, S3Image, PayoutRate, TestAnnotation, ControlAnnotation
 
 
 class BaseTestCase(TestCase):
@@ -16,6 +16,7 @@ class BaseTestCase(TestCase):
     ADMIN_USER_NAME = "foobar-admin"
     USER_NAME = "foobar"
     OTHER_USER_NAME = "foobar2"
+    SUPER_USER_NAME = "foobar3"
 
 
     def setUp(self):
@@ -32,6 +33,13 @@ class BaseTestCase(TestCase):
             email=f'{self.OTHER_USER_NAME}@mail.com',
             password=self.PASSWORD_FACTORY)
         self.other_user_profile = UserProfile.objects.create(user=self.other_user)
+
+        self.admin_user = User.objects.create_superuser(
+            username=self.SUPER_USER_NAME,
+            email=f"{self.SUPER_USER_NAME}@derpmail.com",
+            password=self.PASSWORD_FACTORY
+        )
+        self.admin_user_profile = UserProfile.objects.create(user=self.admin_user)
 
 
     def tearDown(self):
@@ -60,4 +68,9 @@ class BaseTestCase(TestCase):
     def create_test_annotation(self, s3_image, assigned_annotation):
         return TestAnnotation.objects.create(
             s3_image=s3_image, assigned_annotation=assigned_annotation,
+        )
+
+    def create_control_annotation(self, s3_image, data):
+        return ControlAnnotation.objects.create(
+            s3_image=s3_image, data=data,
         )

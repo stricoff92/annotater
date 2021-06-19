@@ -203,10 +203,13 @@ def add_control_annotation(request):
 
     text = form.cleaned_data['text']
     image_slug = form.cleaned_data['image_slug']
-
     s3image = get_object_or_404(S3Image, slug=image_slug)
-    if s3image.controlannotation is not None:
-        return Response(form.errors.as_json(), status.HTTP_409_CONFLICT)
+
+    try:
+        if s3image.controlannotation is not None:
+            return Response(form.errors.as_json(), status.HTTP_409_CONFLICT)
+    except ControlAnnotation.DoesNotExist:
+        pass
 
     ControlAnnotation.objects.create(
         s3_image=s3image,

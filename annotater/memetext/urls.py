@@ -10,8 +10,11 @@ urlpatterns = [
     # webviews
     path("", web_views.landing, name="memetext-web-landing"),
     path("add-annotation", web_views.add_annotation, name="memetext-web-add-annotation"),
+    path("add-control-annotation", web_views.add_control_annotation, name="memetext-web-add-control-annotation"),
 
     # api views
+
+    # Test annotation
     path(
         "api/get-image/<slug:assignment_slug>",
         api_views.get_image_to_annotate,
@@ -27,15 +30,18 @@ urlpatterns = [
         api_views.add_test_annotation,
         name="memetext-api-new-test-annotation",
     ),
+
+    # Control Annotations
+    path(
+        "api/admin/download-image/<slug:image_slug>",
+        api_views.admin_download_image,
+        name="memetext-api-admin-download-image",
+    ),
     path(
         "api/admin/new-control-annotation",
         api_views.add_control_annotation,
         name="memetext-api-new-control-annotation",
     ),
-    path(
-        "api/admin/download-image/<slug:image_slug>",
-        api_views.admin_download_image,
-        name="memetext-api-new-control-annotation",
-    ),
+
 ]
 
