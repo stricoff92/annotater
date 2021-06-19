@@ -24,6 +24,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
+        print("\n Adding Database Objects")
         # setup new user
         pw_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()"
         User = get_user_model()
@@ -45,7 +46,8 @@ class Command(BaseCommand):
         fps = [sis.get_sample_file_as_binary_io(n) for n in file_names]
 
         s3service = S3Service()
-        for fp in fps:
+        for fp, file_name in zip(fps, file_names):
+            print(f" S3: Uploading {file_name} to bucket {settings.MEMETEXT_S3_BUCKET} 📡")
             new_img = S3Image.objects.create(
                 batch=new_batch,
                 file_extension="jpg",
@@ -67,3 +69,4 @@ class Command(BaseCommand):
         print(f"\n\n* * * * * login link for {new_user.username} * * * * *\n\n")
         print(login_url)
         print("\n\n* * * * * * * * * * * * * * * * * *")
+        print("🌟 🌟 🌟  SUCCESS 🌟 🌟 🌟 \n")

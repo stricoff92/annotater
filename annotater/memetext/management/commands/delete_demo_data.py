@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.conf import settings
+from botocore.exceptions import ClientError
 
 from website.utils import get_log_url_for_user
 from website.models import UserProfile
@@ -26,18 +27,23 @@ class Command(BaseCommand):
         demo_test_annotations = TestAnnotation.objects.filter(s3_image__in=demo_s3_images)
         demo_assigned_annotations = AssignedAnnotation.objects.filter(is_demo=True)
         demo_user_profiles = UserProfile.objects.filter(is_demo=True)
-        demo_user_ids = demo_user_profiles.values_list("user_id", flat=True)
+        demo_user_ids = list(demo_user_profiles.values_list("user_id", flat=True))
 
         # delete items from S3.
         s3service = S3Service()
         keys_to_delete = []
         keys_to_delete += [ta.s3_path for ta in demo_test_annotations]
         keys_to_delete += [s3i.s3_path for s3i in demo_s3_images]
-        resp = s3service.delete_objects_with_keys(settings.MEMETEXT_S3_BUCKET, keys_to_delete)
-        print("deleting", len(keys_to_delete), "keys from S3")
-        print("* * * * * * * * RESPONSE FROM S3 * * * * * * * *")
-        print(resp)
-        print("* * * * * * * * * * * * * * * * * * * * * * * * ")
+        print("\nDeleting keys from S3  📡")
+        try:
+            resp = s3service.delete_objects_with_keys(settings.MEMETEXT_S3_BUCKET, keys_to_delete)
+        except ClientError as e:
+            print("\n ⚠️  S3 Error  ⚠️")
+            print(e, "\n")
+        else:
+            print("*  ✅  deleted", len(keys_to_delete), "keys from S3" , "RESPONSE FROM S3 * * * * * * * *")
+            print(resp)
+            print("* * * * * * * * * * * * * * * * * * * * * * * * \n")
 
         # delete items from the DB.
         print("deleting objects from the DB")
@@ -55,4 +61,10 @@ class Command(BaseCommand):
         print("deleted_user_profiles", deleted_user_profiles)
         print("deleted_users", deleted_users)
         print("* * * * * * * * * * * * * * * * * * * * * * * * ")
-        print(" SUCCESS! ")
+        if any([
+            deleted_test_annotations[0], deleted_s3_image_records[0], deleted_assigned_annotation[0],
+            deleted_demo_batches[0], deleted_user_profiles[0], deleted_users[0],
+        ]):
+            print("\n 🌟 🌟 🌟  SUCCESS 🌟 🌟 🌟 \n")
+        else:
+            print("\n ⚠️  ⚠️  ⚠️   NO Changes ⚠️  ⚠️  ⚠️ \n")

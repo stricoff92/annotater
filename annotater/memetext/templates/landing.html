@@ -60,16 +60,19 @@
                         <strong>Completed Count:</strong> {{ a.completed_count }}
                     </div>
                     <div>
-                        <strong>Is Complete:</strong> {% if a.is_complete %}Yes{% else %}No{% endif %}
+                        <strong>Assignment Fulfilled:</strong> {% if a.is_complete %}Yes{% else %}No{% endif %}
                     </div>
                     <div>
-                        <strong>Payout Rate:</strong> {{ a.payout_rate.rate }}
+                        <strong>Payout Rate:</strong>$ {{ a.payout_rate.rate|floatformat:2 }}
                     </div>
                     <div>
-                        <strong>Total Payout Amount:</strong> {{ a.payout_amount }}
+                        <strong>Total Payout Amount:</strong>$ {{ a.payout_amount|floatformat:2 }}
+                    </div>
+                    <div>
+                        <strong>Amount Paid:</strong>$ {{ a.paid_amount|floatformat:2 }}
                     </div>
                     <div class="mb-2">
-                        <strong>Paid:</strong> {{ a.paid_amount }}
+                        <strong>Pending Payout:</strong>$ {{ a.pending_payout|floatformat:2 }}
                     </div>
                 </div>
             {% endfor %}

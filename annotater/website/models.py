@@ -14,6 +14,8 @@ class UserProfile(models.Model):
     assigned_item = models.CharField(
         max_length=100, blank=True, null=True, default=None)
 
+    is_active = models.BooleanField(default=True, blank=True)
+
     is_demo = models.BooleanField(default=False, blank=True)
 
 

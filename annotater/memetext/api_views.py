@@ -17,8 +17,8 @@ from rest_framework.permissions import (
 from botocore.exceptions import ClientError
 
 from memetext.decorators import user_can_use_api_widget as user_can_use_memetext_api_widget
-from memetext.forms import NewTestAnnotation
-from memetext.models import S3Image, TestAnnotation
+from memetext.forms import NewTestAnnotation, NewControlAnnotation
+from memetext.models import S3Image, TestAnnotation, ControlAnnotation, AnnotationBatch
 from memetext.renderers import JPGRenderer
 from memetext.services.s3 import S3Service
 from memetext.services.query import QueryService
@@ -187,4 +187,52 @@ def add_test_annotation(request):
         print("ERROR", e)
         return Response({}, status.HTTP_502_BAD_GATEWAY)
     else:
-        return Response({}, status.HTTP_201_CREATED)
+        request.user.userprofile.assigned_item = None
+        request.user.userprofile.save(update_fields=['assigned_item'])
+        return Response({"rate":assigned_annotation.payout_rate.rate}, status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+@user_can_use_memetext_api_widget
+def add_control_annotation(request):
+    form = NewControlAnnotation(request.data)
+
+    if not form.is_valid():
+        return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
+
+    text = form.cleaned_data['text']
+    image_slug = form.cleaned_data['image_slug']
+
+    s3image = get_object_or_404(S3Image, slug=image_slug)
+    if s3image.controlannotation is not None:
+        return Response(form.errors.as_json(), status.HTTP_409_CONFLICT)
+
+    ControlAnnotation.objects.create(
+        s3_image=s3image,
+        data=json.dumps({'data':text})
+    )
+    return Response({}, status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+@user_can_use_memetext_api_widget
+@renderer_classes([JPGRenderer])
+def admin_download_image(request, image_slug: str):
+    s3image = get_object_or_404(S3Image, slug=image_slug)
+    service = S3Service()
+    try:
+        fp = service.download_object_to_fp(
+            settings.MEMETEXT_S3_BUCKET,
+            s3image.s3_path,
+        )
+    except ClientError as e:
+        if "404" in str(e):
+            return Response(b"", status.HTTP_404_NOT_FOUND)
+        else:
+            raise
+
+    response = Response(fp.getvalue(), status.HTTP_200_OK)
+    response['Cache-Control'] = 'no-store'
+    return response

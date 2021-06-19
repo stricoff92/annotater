@@ -10,7 +10,9 @@ from .base import BaseModel
 class AnnotationBatch(BaseModel):
     name = models.CharField(max_length=20, unique=True)
     instructions = models.TextField()
+    instructions_expanded = models.TextField(blank=True, default="")
     batch_message = models.TextField()
+    batch_message_expanded = models.TextField(blank=True, default="")
 
     def __str__(self):
         return f"Batch {self.name}"

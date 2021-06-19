@@ -51,6 +51,10 @@ class AssignedAnnotation(BaseModel):
         return self.payment_set.aggregate(s=Sum("amount"))["s"] or Decimal(0)
 
     @property
+    def pending_payout(self)-> Decimal:
+        return Decimal(max(0, self.payout_amount - self.paid_amount)).quantize(Decimal("0.00"))
+
+    @property
     def is_paid(self):
         return self.payout_amount >= self.paid_amount
 
@@ -86,7 +90,7 @@ class TestAnnotation(BaseModel):
 class ControlAnnotation(BaseModel):
     """ Expected value a TestAnnotation's data
     """
-    s3_image = models.ForeignKey(
+    s3_image = models.OneToOneField(
         "memetext.S3Image", on_delete=models.PROTECT)
 
     data = models.TextField(blank=True, null=True, default=None)

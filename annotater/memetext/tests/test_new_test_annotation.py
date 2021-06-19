@@ -164,6 +164,26 @@ class TestNewTestAnnotation(BaseTestCase):
         self.assertFalse(TestAnnotation.objects.exists())
 
 
+    def test_user_cannot_create_annotation_for_Another_users_assignment(self):
+        self.client.force_login(self.other_user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+        load_image_token = self.s3image.get_load_image_token()
+        annotate_image_token = self.s3image.get_annotate_image_token(load_image_token)
+        data = {
+            'text': 'hello world',
+            'image_slug': self.s3image.slug,
+            'annotate_image_token': annotate_image_token,
+            'load_image_token': load_image_token,
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.client.force_login(self.user)
+        response = self.client.post(self.url, data, format="json")
+        self.assertTrue(response.status_code == status.HTTP_201_CREATED)
+
+
     def test_user_can_create_new_test_annotation(self):
         self.client.force_login(self.user)
         annotation_assignment = self.create_assigned_annotation(self.batch)
@@ -182,6 +202,25 @@ class TestNewTestAnnotation(BaseTestCase):
         self.assertEquals(TestAnnotation.objects.count(), 1)
         ta = TestAnnotation.objects.first()
         self.assertEquals(ta.s3_image, self.s3image)
+
+
+    def test_users_assigned_item_is_set_to_null_after_uploading_a_new_test_annotation(self):
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+        load_image_token = self.s3image.get_load_image_token()
+        annotate_image_token = self.s3image.get_annotate_image_token(load_image_token)
+        data = {
+            'text': 'hello world',
+            'image_slug': self.s3image.slug,
+            'annotate_image_token': annotate_image_token,
+            'load_image_token': load_image_token,
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.user.userprofile.refresh_from_db()
+        self.assertIsNone(self.user.userprofile.assigned_item)
 
 
     def test_new_annotation_data_is_uploaded_to_s3(self):

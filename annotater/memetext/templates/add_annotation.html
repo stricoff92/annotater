@@ -60,11 +60,13 @@
     function getImageSlug() {
         return $("body").data("imageSlug")
     }
-    function disableSubmit() {
+    function disableForm() {
         $("#submit-annotation-btn").addClass('disabled')
+        $("#enter-text-input").prop('disabled', true)
     }
-    function enableSubmit() {
+    function enableForm() {
         $("#submit-annotation-btn").removeClass('disabled')
+        $("#enter-text-input").prop('disabled', false);
     }
     function submitIsDisabled() {
         return $("#submit-annotation-btn").hasClass('disabled')
@@ -106,18 +108,20 @@
 
             } else if (xhr.status == 204) {
                 window.location = "/memetext/"
+            } else {
+                throw new Error("Unexpected status code from server, got " + xhr.status)
             }
         })
         $("#submit-annotation-btn").click(()=>{
             if (submitIsDisabled()) {
                 return
             }
-            disableSubmit()
+            disableForm()
             resetErrors()
             const text = $("#enter-text-input").val().trim()
             if (!text.length) {
                 if (!confirm("No text entered. Are you sure you want to submit an empty text box?")) {
-                    enableSubmit()
+                    enableForm()
                     return
                 }
             }
@@ -131,7 +135,8 @@
             postJson(url, data,
                 (success, status, xhr)=>{
                     if (xhr.status == 201) {
-                        setSuccessMsg("✅ Success, redirecting....")
+                        console.log(xhr)
+                        setSuccessMsg(`+$${xhr.responseJSON.rate.toFixed(2)}, redirecting....`)
                         setTimeout(()=>{
                             location.reload()
                         }, 1000)

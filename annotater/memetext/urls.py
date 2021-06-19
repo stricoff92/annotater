@@ -27,5 +27,15 @@ urlpatterns = [
         api_views.add_test_annotation,
         name="memetext-api-new-test-annotation",
     ),
+    path(
+        "api/admin/new-control-annotation",
+        api_views.add_control_annotation,
+        name="memetext-api-new-control-annotation",
+    ),
+    path(
+        "api/admin/download-image/<slug:image_slug>",
+        api_views.admin_download_image,
+        name="memetext-api-new-control-annotation",
+    ),
 ]
 
