@@ -1,5 +1,6 @@
 
 import json
+import random
 from typing import Tuple
 
 from django.contrib.auth.decorators import login_required
@@ -81,7 +82,12 @@ def add_control_annotation(request):
             target_s3_image = None
             found = False
     if found:
-        target_s3_image = filtered_image_qs.order_by("created_at").first()
+        pool = filtered_image_qs.order_by("created_at")
+        count = pool.count()
+        if count:
+            target_s3_image = pool[random.randint(0, count - 1)]
+        else:
+            target_s3_image = None
 
     context = {
         's3_image':target_s3_image,
@@ -157,8 +163,8 @@ def view_annotation_audit(request):
             'raw_ratio': raw_ratio,
             'sanitized_ratio': sanitized_ratio,
             'flag': _get_flag(raw_ratio, sanitized_ratio),
-            'test_text': test_text,
-            'control_text': control_text,
+            'test_text': repr(test_text),
+            'control_text': repr(control_text),
         })
 
     report_rows.sort(key=lambda r: r['sanitized_ratio'])

@@ -49,10 +49,10 @@
                         {{ row.test_completed_at|date:'M j,  g:iA'}}
                     </td>
                     <td>
-                        {{ row.raw_ratio }}
+                        {{ row.raw_ratio|floatformat:3 }}
                     </td>
                     <td>
-                        {{ row.sanitized_ratio }}
+                        {{ row.sanitized_ratio|floatformat:3 }}
                     </td>
                     <td>
                         <a id="exp-row-link-{{ row.s3_image_slug }}" href="#" onclick="expandRow('{{ row.s3_image_slug }}')">
