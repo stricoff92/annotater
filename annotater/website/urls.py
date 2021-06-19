@@ -4,7 +4,6 @@ from django.urls import path
 from two_factor.views import  QRGeneratorView
 
 from website import views
-from website.utils import set_tfa_qr_session_key
 
 urlpatterns = [
     path("", views.landing, name="anon-landing"),

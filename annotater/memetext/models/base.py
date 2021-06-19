@@ -8,6 +8,7 @@ class BaseModel(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    is_demo = models.BooleanField(default=False, blank=True)
 
     class Meta:
         abstract = True

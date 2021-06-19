@@ -1,8 +1,6 @@
 
 import datetime as dt
-from functools import wraps
-from base64 import b32encode
-from binascii import unhexlify
+import os.path
 
 from dateutil import parser as datetime_parser
 from django.conf import settings
@@ -14,6 +12,14 @@ from django_otp.util import random_hex
 from django_otp import user_has_device
 from rest_framework import status
 import jwt
+
+
+
+def get_tmp_file_dir(filename: str=None) -> str:
+    args = ['tmp']
+    if filename:
+        args.append(filename)
+    return os.path.join(settings.BASE_DIR, *args)
 
 
 def get_login_token(user):
@@ -40,19 +46,3 @@ def get_log_url_for_user(user) -> str:
     token = get_login_token(user)
     url = settings.ABSOLUTE_BASE_URL + reverse("anon-login-with-link") + f"?t={token}"
     return url
-
-
-def set_tfa_qr_session_key(function):
-    @wraps(function)
-    def decorated_function(request, *args, **kwargs):
-        if user_has_device(request.user):
-            return HttpResponse(status=status.HTTP_409_CONFLICT)
-
-        key = random_hex(20)
-        rawkey = unhexlify(key.encode('ascii'))
-        b32key = b32encode(rawkey).decode('utf-8')
-        request.session[settings.TFA_QR_SESSION_SECRET_KEY] = b32key
-        request.session[settings.TFA_QR_SESSION_SECRET_KEY_HEX] = key
-        return function(request, *args, **kwargs)
-
-    return decorated_function

@@ -14,6 +14,9 @@ class UserProfile(models.Model):
     assigned_item = models.CharField(
         max_length=100, blank=True, null=True, default=None)
 
+    is_demo = models.BooleanField(default=False, blank=True)
+
+
     def __str__(self):
         return "UserProfile for " + str(self.user)
 

@@ -158,7 +158,6 @@ def add_test_annotation(request):
             "No assignment.",
             status.HTTP_400_BAD_REQUEST)
 
-    print(111, image_slug, batch)
     s3image = get_object_or_404(S3Image, slug=image_slug, batch=batch)
 
     if not s3image.annotate_image_token_is_valid(
