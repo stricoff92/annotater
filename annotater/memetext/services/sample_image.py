@@ -14,7 +14,7 @@ class SampleImageService:
             args.append(filename)
         return os.path.join(settings.BASE_DIR, *args)
 
-    def get_sample_file_as_binary_io(self, file_name) -> BinaryIO:
+    def get_sample_file_as_binary_io(self, file_name: str) -> BinaryIO:
         with open(self._get_full_path(file_name), "rb") as f:
             fp = BytesIO(f.read())
         fp.seek(0)

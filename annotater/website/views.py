@@ -20,15 +20,15 @@ def landing(request):
 
 @require_safe
 def login_with_magic_link(request):
-    if request.user.is_authenticated:
-        return redirect("anon-landing")
-
     token = request.GET.get('t')
     if not token:
         return HttpResponseBadRequest()
     user = get_user_from_login_token(token)
     if not user or (not settings.DEBUG and user.is_superuser):
         return HttpResponseBadRequest()
+    # Must logout before you can log in.
+    if request.user.is_authenticated:
+        logout(request)
     login(request, user)
     return redirect("anon-landing")
 
