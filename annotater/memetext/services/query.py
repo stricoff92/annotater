@@ -30,7 +30,7 @@ class QueryService:
             return 0
 
         tested_s3_images = (TestAnnotation.objects
-            .filter(s3_image__in=batch.s3image_set.all())
+            .filter(s3_image__batch=batch)
             .values_list("s3_image_id", flat=True))
 
         return batch.s3image_set.filter(

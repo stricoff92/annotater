@@ -11,15 +11,17 @@
     <div class="mt-3 ml-2">
         <h2>Add Control Annotation</h2>
     </div>
-    <div class="card mt-3">
-        <div class="card-header">
-            <strong>Batch <i>{{ s3_image.batch.name }}</i> Instructions</strong>
+    {% if s3_image.batch.instructions %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <strong>Batch <i>{{ s3_image.batch.name }}</i> Instructions</strong>
+            </div>
+            <div class="card-body">
+                <div></div>
+                    {{ s3_image.batch.instructions|safe }}
+            </div>
         </div>
-        <div class="card-body">
-            <div></div>
-                {{ s3_image.batch.instructions }}
-        </div>
-    </div>
+    {% endif %}
     <div class="mt-3 text-center">
         <img
             src="{% url 'memetext-api-admin-download-image' s3_image.slug %}"
@@ -84,7 +86,7 @@
                             alert("Something went wrong. Please refresh.")
                         }
                     },
-                    (success, status, xhr)=>{
+                    ()=>{
                         alert(":( Something went wrong. Please refresh.")
                     },
                 )

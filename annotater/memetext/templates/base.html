@@ -96,26 +96,26 @@
                 const prefix = isPositive ? "+" : ""
                 return prefix + (x-0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
-            function postJson(url, data, successCb, errorCb) {
+            function postJson(url, data, success, error) {
                 $.ajax({
                     url,
                     type:'POST',
+                    success,
+                    error,
                     data:JSON.stringify(data),
                     contentType: 'application/json',
-                    success:successCb,
-                    error:errorCb,
                 })
             }
 
-            function postFormData(url, data, successCb, errorCb) {
+            function postFormData(url, data, success, error) {
                 $.ajax({
                     url,
                     type:'POST',
                     data,
                     contentType: false,
                     processData: false,
-                    success:successCb,
-                    error:errorCb,
+                    success,
+                    error,
                 })
             }
 
@@ -151,9 +151,9 @@
 
                     if (hasDontEnumBug) {
                         for (i = 0; i < dontEnumsLength; i++) {
-                        if (hasOwnProperty.call(obj, dontEnums[i])) {
-                            result.push(dontEnums[i]);
-                        }
+                            if (hasOwnProperty.call(obj, dontEnums[i])) {
+                                result.push(dontEnums[i]);
+                            }
                         }
                     }
                     return result;

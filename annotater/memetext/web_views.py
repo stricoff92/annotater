@@ -118,8 +118,9 @@ def view_annotation_audit(request):
     control_annotations = ControlAnnotation.objects.filter(s3_image__in=s3_images)
 
     overlapping_s3_ids = set(s3_images.values_list("id", flat=True))
-    overlapping_s3_ids = overlapping_s3_ids.union(set(test_annotations.values_list("s3_image_id", flat=True)))
-    overlapping_s3_ids = overlapping_s3_ids.union(set(control_annotations.values_list("s3_image_id", flat=True)))
+    overlapping_s3_ids = overlapping_s3_ids.intersection(set(test_annotations.values_list("s3_image_id", flat=True)))
+    overlapping_s3_ids = overlapping_s3_ids.intersection(set(control_annotations.values_list("s3_image_id", flat=True)))
+    print("overlapping_s3_ids", overlapping_s3_ids)
 
     s3_images = s3_images.filter(id__in=overlapping_s3_ids)
     test_annotations = test_annotations.filter(s3_image__in=s3_images)

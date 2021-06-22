@@ -14,6 +14,7 @@ from pathlib import Path
 from string import ascii_letters, digits
 import os.path
 
+
 from annotater import applocals
 
 
@@ -153,7 +154,8 @@ USE_L10N = True
 USE_TZ = True
 
 
-LOGIN_URL = "/"
+LOGIN_URL = "/login-with-cred"
+LOGIN_REDIRECT_URL = "/"
 
 
 # Static files (CSS, JavaScript, Images)

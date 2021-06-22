@@ -15,6 +15,7 @@ from memetext.services.s3 import S3Service
 from memetext.models import AnnotationBatch, AssignedAnnotation, S3Image, PayoutRate
 
 
+
 class Command(BaseCommand):
 
 
@@ -24,6 +25,31 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **kwargs):
+        DEMO_INSTRUCTIONS = """
+            <p>Look at the image surrounded by red lines. Type the text you see <i>exactly how you would read it</i>. Ordering of words matters.</p>
+            <p>If you are not sure of the ordering, simply type how you would naturally read the image to understand it: Left to right, top to bottom. If there is no text in the image: leave the text box empty and click submit.</p>
+            <p>Do not include watermarks or insignificant text.<p>
+        """
+        DEMO_INSTRUCTIONS_EXPANDED = """
+            <hr>
+            <h3>Example 1</h3>
+            <div><img src="/static/example1.jpg" style="border:5px dashed #ff9191; max-width:80vw; max-height:80vh;"></div>
+            <div class="alert alert-secondary mt-2 p-1">
+            <strong>Text From the Image</strong><br>
+            Dog owners: What breed is that, Husky? No! That's an Alaskan Malamute!!! Cat Owners: Hey What breed is he? Cat.
+            </div>
+        """
+        BATCH_MESSAGE = """
+            <h2><strong>😺 MEMES!</strong></h2>
+            <p>
+            Thanks for helping! Your task is to read memes from the internet and type the text you see.
+            </p>
+            <p>
+            See <strong>Instructions</strong> on the next page for details.
+            </p>
+        """
+
+
         print("\n Adding Database Objects")
         # setup new user
         pw_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()"
@@ -35,8 +61,9 @@ class Command(BaseCommand):
         profile = UserProfile.objects.create(user=new_user, assigned_widgets=WIDGET_NAMES.memetext, is_demo=True)
         new_batch = AnnotationBatch.objects.create(
             name=kwargs['batch'],
-            batch_message="""<h2><strong>😺 MEMES!</strong></h2><h4 style="color:red"><strong><i>READ THIS BEFORE STARTING</i></strong></h4>""",
-            instructions="write the text you seee",
+            batch_message=BATCH_MESSAGE,
+            instructions=DEMO_INSTRUCTIONS,
+            instructions_expanded=DEMO_INSTRUCTIONS_EXPANDED,
             is_demo=True,
         )
         payout_rate, _ = PayoutRate.objects.get_or_create(rate=Decimal("0.1"))
