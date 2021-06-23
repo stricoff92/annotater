@@ -17,14 +17,14 @@ class FileBackend(AbstractBackend):
         return hashlib.md5(path.encode()).hexdigest()
 
     def _get_full_path(self, filename: str):
-        return os.path.join(settings.BASE_DIR, "annotater", "tmp", filename)
+        return os.path.join(settings.BASE_DIR, "tmp", filename)
 
     def upload_fp(self, fp:BinaryIO, bucket:str, s3_path:str):
         ext = s3_path.split(".")[-1]
         hashed_path = self._hash_path(bucket + s3_path)
         full_path = self._get_full_path(f"{hashed_path}.{ext}")
         with open(full_path, 'wb') as f:
-            f.write.write(fp.read())
+            f.write(fp.read())
 
 
     def download_object_to_fp(self, bucket:str, s3_path:str) -> BinaryIO:
@@ -46,6 +46,7 @@ class FileBackend(AbstractBackend):
             hashed_path = self._hash_path(bucket + key)
             full_path = self._get_full_path(f"{hashed_path}.{ext}")
             if not os.path.exists(full_path):
+                print(full_path)
                 raise FileNotFoundError
             else:
                 file_paths.append(full_path)

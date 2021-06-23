@@ -12,7 +12,7 @@ from website.utils import get_log_url_for_user
 from website.models import UserProfile
 from website.constants import WIDGET_NAMES
 from memetext.services.sample_image import SampleImageService
-from memetext.services.s3 import S3Service
+from memetext.services.storage_backend import get_backend_class
 from memetext.models import AnnotationBatch, AssignedAnnotation, S3Image, PayoutRate, TestAnnotation, ControlAnnotation
 
 
@@ -31,14 +31,14 @@ class Command(BaseCommand):
         demo_user_ids = list(demo_user_profiles.values_list("user_id", flat=True))
 
         # delete items from S3.
-        s3service = S3Service()
+        storeage_service = get_backend_class()()
         keys_to_delete = []
         keys_to_delete += [ta.s3_path for ta in demo_test_annotations]
         keys_to_delete += [s3i.s3_path for s3i in demo_s3_images]
         print("\nDeleting keys from S3  📡")
         try:
-            resp = s3service.delete_objects_with_keys(settings.MEMETEXT_S3_BUCKET, keys_to_delete)
-        except ClientError as e:
+            resp = storeage_service.delete_objects_with_keys(settings.MEMETEXT_S3_BUCKET, keys_to_delete)
+        except (ClientError, FileNotFoundError) as e:
             print("\n ⚠️  S3 Error  ⚠️")
             print(e, "\n")
         else:

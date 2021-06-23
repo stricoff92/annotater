@@ -12,8 +12,11 @@ from freezegun import freeze_time
 
 from .base import BaseTestCase
 from website.constants import WIDGET_NAMES
-from memetext.services.s3 import S3Service
+from memetext.services.storage_backend import get_backend_class
 from memetext.models import TestAnnotation
+
+
+StorageBackend = get_backend_class()
 
 
 class TestNewTestAnnotation(BaseTestCase):
@@ -28,7 +31,7 @@ class TestNewTestAnnotation(BaseTestCase):
         self.url = reverse("memetext-api-new-test-annotation")
 
         self.mock_s3_upload = mock.patch.object(
-            S3Service,
+            StorageBackend,
             "upload_fp",
             return_value=None,
         ).start()

@@ -10,8 +10,10 @@ from freezegun import freeze_time
 
 from .base import BaseTestCase
 from memetext.models import  ControlAnnotation
-from memetext.services.s3 import S3Service
+from memetext.services.storage_backend import get_backend_class
 
+
+StorageBackend = get_backend_class()
 
 class TestAdminDownloadImage(BaseTestCase):
     def setUp(self):
@@ -24,7 +26,7 @@ class TestAdminDownloadImage(BaseTestCase):
         self.mock_download = BytesIO(b"hello world")
         self.mock_download.seek(0)
         self.mock_download_object_to_fp = mock.patch.object(
-            S3Service,
+            StorageBackend,
             "download_object_to_fp",
             return_value=self.mock_download,
         ).start()

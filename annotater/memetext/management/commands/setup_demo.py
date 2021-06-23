@@ -11,7 +11,7 @@ from website.utils import get_log_url_for_user
 from website.models import UserProfile
 from website.constants import WIDGET_NAMES
 from memetext.services.sample_image import SampleImageService
-from memetext.services.s3 import S3Service
+from memetext.services.storage_backend import get_backend_class
 from memetext.models import AnnotationBatch, AssignedAnnotation, S3Image, PayoutRate
 
 
@@ -72,7 +72,7 @@ class Command(BaseCommand):
         sis = SampleImageService()
         fps = [sis.get_sample_file_as_binary_io(n) for n in file_names]
 
-        s3service = S3Service()
+        s3service = get_backend_class()()
         for fp, file_name in zip(fps, file_names):
             print(f" S3: Uploading {file_name} to bucket {settings.MEMETEXT_S3_BUCKET} 📡")
             new_img = S3Image.objects.create(

@@ -20,7 +20,7 @@ from memetext.decorators import user_can_use_api_widget as user_can_use_memetext
 from memetext.forms import NewTestAnnotation, NewControlAnnotation
 from memetext.models import S3Image, TestAnnotation, ControlAnnotation, AnnotationBatch
 from memetext.renderers import JPGRenderer
-from memetext.services.s3 import S3Service
+from memetext.services.storage_backend import get_backend_class
 from memetext.services.query import QueryService
 
 
@@ -120,7 +120,7 @@ def download_image(request, assignment_slug:str, image_slug:str):
     ):
         return Response(b"", status.HTTP_400_BAD_REQUEST)
     else:
-        service = S3Service()
+        service = get_backend_class()()
         try:
             fp = service.download_object_to_fp(
                 settings.MEMETEXT_S3_BUCKET,
@@ -174,7 +174,7 @@ def add_test_annotation(request):
             status.HTTP_400_BAD_REQUEST)
 
 
-    s3_service = S3Service()
+    s3_service = get_backend_class()()
     test_annotation = TestAnnotation.objects.create(
         s3_image=s3image,
         assigned_annotation=assigned_annotation,
@@ -226,7 +226,7 @@ def add_control_annotation(request):
 @renderer_classes([JPGRenderer])
 def admin_download_image(request, image_slug: str):
     s3image = get_object_or_404(S3Image, slug=image_slug)
-    service = S3Service()
+    service = get_backend_class()()
     try:
         fp = service.download_object_to_fp(
             settings.MEMETEXT_S3_BUCKET,

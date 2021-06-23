@@ -9,14 +9,13 @@ from website.utils import get_user_from_login_token
 from website.constants import WIDGET_NAMES
 
 
+@require_safe
+@login_required
 def landing(request):
-    if not request.user.is_authenticated:
-        return HttpResponseForbidden()
+    if request.user.userprofile.can_use_widget(WIDGET_NAMES.memetext):
+        return redirect("memetext-web-landing")
     else:
-        if request.user.userprofile.can_use_widget(WIDGET_NAMES.memetext):
-            return redirect("memetext-web-landing")
-        else:
-            return HttpResponseBadRequest("Error 400: No Assigned Widgets")
+        return HttpResponseBadRequest("Error 400: No Assigned Widgets")
 
 
 @require_safe

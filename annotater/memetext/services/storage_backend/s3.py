@@ -13,7 +13,7 @@ boto_client = boto3.client(
 
 
 
-class S3Service:
+class S3Backend:
     def __init__(self):
         self._boto_client = boto_client
 
