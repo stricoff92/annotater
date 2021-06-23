@@ -16,7 +16,7 @@
             </div>
         </nav>
 
-        <div class="tab-content" id="nav-tabContent">
+        <div class="tab-content mt-3" id="nav-tabContent">
             <div class="tab-pane fade show {% if not skip_instructions %}active{% endif %}" id="nav-instructions" role="tabpanel" aria-labelledby="nav-instructions-tab">
                 <div class="card mt-3 mb-3">
                     <span class="alert alert-info">
@@ -51,7 +51,7 @@
                     >
                     </div>
                 </div>
-                <div id="enter-text-container" class="mt-2">
+                <div id="enter-text-container" class="mt-3">
                     <div>
                         <textarea id="enter-text-input" style="width:100%;" placeholder="enter text here"></textarea>
                     </div>
@@ -189,11 +189,4 @@
 
     })
 </script>
-{% if skip_instructions %}
-    <script>
-        $(document).ready(()=>{
-            // $("#nav-annotation-tab").tab("show")
-        })
-    </script>
-{% endif %}
 {% endblock %}
