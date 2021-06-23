@@ -29,6 +29,13 @@ class Command(BaseCommand):
             <p>Look at the image surrounded by red lines. Type the text you see <i>exactly how you would read it</i>. Ordering of words matters.</p>
             <p>If you are not sure of the ordering, simply type how you would naturally read the image to understand it: Left to right, top to bottom. If there is no text in the image: leave the text box empty and click submit.</p>
             <p>Do not include watermarks or insignificant text.<p>
+            <hr>
+            <h3>Example 1</h3>
+            <div><img src="/static/example1.jpg" style="border:5px dashed #ff9191; max-width:80vw; max-height:80vh;"></div>
+            <div class="alert alert-secondary mt-2 p-1">
+            <strong>Text From the Image</strong><br>
+            Dog owners: What breed is that, Husky? No! That's an Alaskan Malamute!!! Cat Owners: Hey What breed is he? Cat.
+            </div>
         """
         DEMO_INSTRUCTIONS_EXPANDED = """
             <hr>

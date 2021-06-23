@@ -47,6 +47,7 @@ def add_annotation(request):
         "assigned": assigned,
         "batch": batch,
         "remaining_count":remaining_annotations,
+        "skip_instructions": request.GET.get("skip_instructions") is not None,
     }
     return render(request, "add_annotation.html", context)
 
