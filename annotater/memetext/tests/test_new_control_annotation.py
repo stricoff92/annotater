@@ -17,6 +17,7 @@ class TestNewControlAnnotation(BaseTestCase):
         self.batch = self.create_annotation_batch()
         self.s3image = self.create_s3_image(self.batch)
         self.url = reverse("memetext-api-new-control-annotation")
+        print("Hello lol")
 
 
     def test_anon_user_cannot_create_new_control_annotation(self):

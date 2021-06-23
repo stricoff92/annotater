@@ -94,3 +94,4 @@ class S3Image(BaseModel):
         except Exception:
             return False
         return True
+
