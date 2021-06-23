@@ -1,4 +1,5 @@
 
+import csv
 import json
 import random
 from typing import Tuple
@@ -121,7 +122,6 @@ def view_annotation_audit(request):
     overlapping_s3_ids = set(s3_images.values_list("id", flat=True))
     overlapping_s3_ids = overlapping_s3_ids.intersection(set(test_annotations.values_list("s3_image_id", flat=True)))
     overlapping_s3_ids = overlapping_s3_ids.intersection(set(control_annotations.values_list("s3_image_id", flat=True)))
-    print("overlapping_s3_ids", overlapping_s3_ids)
 
     s3_images = s3_images.filter(id__in=overlapping_s3_ids)
     test_annotations = test_annotations.filter(s3_image__in=s3_images)
@@ -134,16 +134,15 @@ def view_annotation_audit(request):
     def _sanitize(s):
         return s.lower().replace(" ", "")
 
-    def _get_flag(rr, sr):
-        if rr >= 0.99:
-            return "💯"
-        if sr < 0.90:
-            return "⚠️"
-        if sr >= 0.98:
-            return "✅"
-        return ""
-
     report_rows = []
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="audit-{batch.name}.csv"'},
+    )
+    writer = csv.writer(response)
+    writer.writerow([
+        "user", "image_slug", "time", "test text", "control text", "raw ratio", "clean ratio"
+    ])
     for test_annotation in test_annotations.values(
         "assigned_annotation__user__username", "s3_image_id", "s3_image__slug", "data", "created_at"
     ):
@@ -153,22 +152,17 @@ def view_annotation_audit(request):
         s3_image_slug = test_annotation['s3_image__slug']
         control_annotation = s3_image_id_to_control_annotation_map[s3_image_id]
         control_text = control_annotation.get_data().get("data", "")
-
-
         raw_ratio = Levenshtein.ratio(control_text, test_text)
         sanitized_ratio = Levenshtein.ratio(_sanitize(control_text), _sanitize(test_text))
 
-        report_rows.append({
-            's3_image_slug': s3_image_slug,
-            'test_completed_by': username,
-            'test_completed_at': test_annotation['created_at'],
-            'raw_ratio': raw_ratio,
-            'sanitized_ratio': sanitized_ratio,
-            'flag': _get_flag(raw_ratio, sanitized_ratio),
-            'test_text': repr(test_text),
-            'control_text': repr(control_text),
-        })
+        writer.writerow([
+            username,
+            s3_image_slug,
+            test_annotation['created_at'].replace(microsecond=0).isoformat(),
+            repr(test_text),
+            repr(control_text),
+            raw_ratio,
+            sanitized_ratio,
+        ])
 
-    report_rows.sort(key=lambda r: r['sanitized_ratio'])
-    context = {'report_rows': report_rows, 'batch':batch}
-    return render(request, "annotation_audit_report.html", context)
+    return response
