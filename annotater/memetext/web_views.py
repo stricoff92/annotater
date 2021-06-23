@@ -4,7 +4,7 @@ import json
 import random
 from typing import Tuple
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.db.models import Q
@@ -54,12 +54,10 @@ def add_annotation(request):
 
 
 @login_required
-@user_can_use_web_widget
+@user_passes_test(lambda u: u.is_superuser)
 def add_control_annotation(request):
     """ View to load the page to enter control annotations.
     """
-    if not request.user.is_superuser:
-        return redirect("memetext-web-landing")
 
     batch_slug = request.GET.get("batch_slug")
     base_url = reverse('memetext-web-add-control-annotation')
@@ -98,10 +96,8 @@ def add_control_annotation(request):
 
 
 @login_required
-@user_can_use_web_widget
+@user_passes_test(lambda u: u.is_superuser)
 def view_annotation_audit(request):
-    if not request.user.is_superuser:
-        return redirect("memetext-web-landing")
 
     batch_slug = request.GET.get("batch_slug")
     base_url = reverse('memetext-annotation-audit')

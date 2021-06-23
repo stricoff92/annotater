@@ -22,7 +22,7 @@ class AnnotationBatch(BaseModel):
         from memetext.models import TestAnnotation
         tested_s3_images = TestAnnotation.objects.filter(s3_image__in=self.s3image_set.all()).values_list("s3_image_id", flat=True)
         return self.s3image_set.filter(
-            ~models.Q(id__in=tested_s3_images)
+            ~Q(id__in=tested_s3_images)
             & (
                 Q(last_assigned__isnull=True)
                 | Q(last_assigned__lt=(timezone.now() - dt.timedelta(minutes=5)).isoformat())
