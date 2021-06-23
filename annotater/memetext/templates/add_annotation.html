@@ -7,10 +7,10 @@
     <div id="add-annotation-container">
         <nav>
             <div class="nav nav-tabs" id="myTab" role="tablist">
-                <a class="nav-item nav-link {% if not skip_instructions %}active{% endif %}" id="nav-instructions-tab" data-toggle="tab" href="#nav-instructions" role="tab" aria-controls="nav-instructions" aria-selected="true">
+                <a class="nav-item nav-link {% if not skip_instructions %}active{% endif %}" id="nav-instructions-tab" data-toggle="tab" href="#nav-instructions" role="tab" aria-controls="nav-instructions" aria-selected="{% if not skip_instructions %}true{% else %}false{% endif %}">
                     ℹ️ Instructions
                 </a>
-                <a class="nav-item nav-link {% if skip_instructions %}active{% endif %}" id="nav-annotation-tab" data-toggle="tab" href="#nav-annotation" role="tab" aria-controls="nav-annotation" aria-selected="false">
+                <a class="nav-item nav-link {% if skip_instructions %}active{% endif %}" id="nav-annotation-tab" data-toggle="tab" href="#nav-annotation" role="tab" aria-controls="nav-annotation" aria-selected="{% if skip_instructions %}true{% else %}false{% endif %}">
                     📝 Annotation
                 </a>
             </div>
