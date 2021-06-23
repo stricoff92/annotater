@@ -6,6 +6,8 @@ from django.conf import settings
 import boto3
 
 
+from .abstract import AbstractBackend
+
 boto_client = boto3.client(
     's3',
     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -13,7 +15,10 @@ boto_client = boto3.client(
 
 
 
-class S3Backend:
+class S3Backend(AbstractBackend):
+
+    name = "S3"
+
     def __init__(self):
         self._boto_client = boto_client
 

@@ -31,18 +31,18 @@ class Command(BaseCommand):
         demo_user_ids = list(demo_user_profiles.values_list("user_id", flat=True))
 
         # delete items from S3.
-        storeage_service = get_backend_class()()
+        storage_service = get_backend_class()()
         keys_to_delete = []
         keys_to_delete += [ta.s3_path for ta in demo_test_annotations]
         keys_to_delete += [s3i.s3_path for s3i in demo_s3_images]
-        print("\nDeleting keys from S3  📡")
+        print(f"\nDeleting keys from {storage_service.name}  📡")
         try:
-            resp = storeage_service.delete_objects_with_keys(settings.MEMETEXT_S3_BUCKET, keys_to_delete)
+            resp = storage_service.delete_objects_with_keys(settings.MEMETEXT_S3_BUCKET, keys_to_delete)
         except (ClientError, FileNotFoundError) as e:
-            print("\n ⚠️  S3 Error  ⚠️")
+            print(f"\n ⚠️  {storage_service.name} Error  ⚠️")
             print(e, "\n")
         else:
-            print("*  ✅  deleted", len(keys_to_delete), "keys from S3" , "RESPONSE FROM S3 * * * * * * * *")
+            print("*  ✅  deleted", len(keys_to_delete), f"keys from {storage_service.name}" , f"RESPONSE FROM {storage_service.name} * * * * * * * *")
             print(resp)
             print("* * * * * * * * * * * * * * * * * * * * * * * * \n")
 

@@ -72,15 +72,15 @@ class Command(BaseCommand):
         sis = SampleImageService()
         fps = [sis.get_sample_file_as_binary_io(n) for n in file_names]
 
-        s3service = get_backend_class()()
+        storage_service = get_backend_class()()
         for fp, file_name in zip(fps, file_names):
-            print(f" S3: Uploading {file_name} to bucket {settings.MEMETEXT_S3_BUCKET} 📡")
+            print(f" {storage_service.name}: Uploading {file_name} to bucket {settings.MEMETEXT_S3_BUCKET} 📡")
             new_img = S3Image.objects.create(
                 batch=new_batch,
                 file_extension="jpg",
                 is_demo=True,
             )
-            s3service.upload_fp(fp, settings.MEMETEXT_S3_BUCKET, new_img.s3_path)
+            storage_service.upload_fp(fp, settings.MEMETEXT_S3_BUCKET, new_img.s3_path)
 
         new_assigned_annotation = AssignedAnnotation.objects.create(
             user=new_user,

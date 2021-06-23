@@ -13,6 +13,8 @@ from .abstract import AbstractBackend
 
 class FileBackend(AbstractBackend):
 
+    name = "tmp/"
+
     def _hash_path(self, path: str) -> str:
         return hashlib.md5(path.encode()).hexdigest()
 
