@@ -64,6 +64,7 @@ if DEBUG:
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -162,10 +163,11 @@ LOGIN_REDIRECT_URL = "/"
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "memetext/templates/static"),
 ]
+STATIC_ROOT =  os.path.join(BASE_DIR, "public_static")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -188,3 +190,9 @@ AWS_SECRET_ACCESS_KEY = applocals.AWS_SECRET_ACCESS_KEY
 AWS_ACCESS_KEY_ID = applocals.AWS_ACCESS_KEY_ID
 
 FILE_STORAGE_BACKEND = getattr(applocals, "FILE_STORAGE_BACKEND", "file")
+
+
+REDDIT_APP_SECRET = applocals.REDDIT_APP_SECRET
+REDDIT_APP_ID = applocals.REDDIT_APP_ID
+REDDIT_USERNAME = applocals.REDDIT_USERNAME
+REDDIT_PASSWORD = applocals.REDDIT_PASSWORD

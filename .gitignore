@@ -1,6 +1,8 @@
 
 .vscode/
 
+public_static/
+
 applocals.py
 *.ipynb
 
