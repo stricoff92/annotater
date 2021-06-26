@@ -26,7 +26,7 @@ def get_login_token(user):
     claims = {
         "userprofile_id":user.userprofile.id,
         "created_at":timezone.now().isoformat(),
-        "expires_at": (timezone.now() + dt.timedelta(days=7)).isoformat(),
+        "expires_at": (timezone.now() + dt.timedelta(days=45)).isoformat(),
     }
     return jwt.encode(claims, settings.SECRET_KEY, "HS256")
 
