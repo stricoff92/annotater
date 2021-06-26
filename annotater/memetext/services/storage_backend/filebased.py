@@ -48,7 +48,6 @@ class FileBackend(AbstractBackend):
             hashed_path = self._hash_path(bucket + key)
             full_path = self._get_full_path(f"{hashed_path}.{ext}")
             if not os.path.exists(full_path):
-                print(full_path)
                 raise FileNotFoundError
             else:
                 file_paths.append(full_path)

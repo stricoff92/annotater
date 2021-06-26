@@ -45,7 +45,7 @@ def get_image_to_annotate(request, assignment_slug:str):
     assigned_item = None
     assigned_item_slug = user.userprofile.assigned_item
     if assigned_item_slug is not None:
-        s3image = S3Image.objects.filter(slug=assigned_item_slug).first()
+        s3image = S3Image.objects.filter(slug=assigned_item_slug, is_flagged=False).first()
         if s3image is None:
             user.userprofile.assigned_item = None
             user.userprofile.save()
@@ -64,7 +64,7 @@ def get_image_to_annotate(request, assignment_slug:str):
             .filter(s3_image__batch=assignment.batch)
             .values_list("s3_image_id", flat=True))
         assigned_item = S3Image.objects.filter(
-            Q(batch=assignment.batch)
+            Q(batch=assignment.batch, is_flagged=False)
             & (Q(last_assigned__isnull=True) | Q(last_assigned__lt=five_mins_ago))
             & ~Q(id__in=s3image_ids_with_test_annotations)
         ).first()

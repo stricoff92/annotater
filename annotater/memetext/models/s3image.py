@@ -28,6 +28,7 @@ class S3Image(BaseModel):
 
     file_extension = models.CharField(max_length=4)
     last_assigned = models.DateTimeField(blank=True, null=True, default=None)
+    is_flagged = models.BooleanField(default=False)
 
     def __str__(self):
         return f"S3Image batch:{self.batch.name} {self.slug}"
