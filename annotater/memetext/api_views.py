@@ -2,6 +2,7 @@
 import datetime as dt
 from io import BytesIO
 import json
+import random
 
 from django.conf import settings
 from django.utils import timezone
@@ -63,12 +64,17 @@ def get_image_to_annotate(request, assignment_slug:str):
         s3image_ids_with_test_annotations = (TestAnnotation.objects
             .filter(s3_image__batch=assignment.batch)
             .values_list("s3_image_id", flat=True))
-        assigned_item = S3Image.objects.filter(
+        available_items = S3Image.objects.filter(
             Q(batch=assignment.batch, is_flagged=False)
             & (Q(last_assigned__isnull=True) | Q(last_assigned__lt=five_mins_ago))
             & ~Q(id__in=s3image_ids_with_test_annotations)
-        ).first()
-        new = True
+        )
+        available_items_count = available_items.count()
+        if available_items_count > 0:
+            assigned_item = available_items[
+                random.randint(0, available_items_count - 1)
+            ]
+            new = True
 
     if assigned_item is not None:
         if new:
