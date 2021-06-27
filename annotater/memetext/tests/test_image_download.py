@@ -272,6 +272,41 @@ class TestImageDownload(BaseTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
+    @freeze_time("2020-05-17T14:17:30+00:00")
+    def test_flagged_image_is_not_downloaded(self):
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        self.s3image.is_flagged = True
+        self.s3image.save()
+        url = reverse(
+            "memetext-api-get-image",
+            kwargs={"assignment_slug":annotation_assignment.slug})
+
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.s3image.is_flagged = False
+        self.s3image.save()
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+
+    @freeze_time("2020-05-17T14:17:30+00:00")
+    def test_assigned_flagged_image_is_not_downloaded(self):
+        self.client.force_login(self.user)
+        annotation_assignment = self.create_assigned_annotation(self.batch)
+        self.user.userprofile.assigned_item = self.s3image.slug
+        self.user.userprofile.save()
+        self.s3image.is_flagged = True
+        self.s3image.save()
+        url = reverse(
+            "memetext-api-get-image",
+            kwargs={"assignment_slug":annotation_assignment.slug})
+
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
     # DOWNLOAD IMAGE ROUTE
 
     def test_anon_user_cant_download_image(self):
