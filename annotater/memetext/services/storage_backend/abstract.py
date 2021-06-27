@@ -5,6 +5,11 @@ from typing import BinaryIO, Any
 
 class AbstractBackend(ABC):
 
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
     @abstractmethod
     def upload_fp(self, fp:BinaryIO, bucket:str, s3_path:str):
         pass
