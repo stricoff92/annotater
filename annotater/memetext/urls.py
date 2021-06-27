@@ -31,6 +31,11 @@ urlpatterns = [
         api_views.add_test_annotation,
         name="memetext-api-new-test-annotation",
     ),
+    path(
+        "api/flag-image/<slug:image_slug>",
+        api_views.flag_image,
+        name="memetext-api-flag-image",
+    ),
 
     # Control Annotations
     path(

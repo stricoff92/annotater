@@ -50,15 +50,44 @@
                         class="mt-2 p-3"
                     >
                     </div>
+                    <div
+                        id="image-flagged-container"
+                        style="display:none; font-size:110%; color:rgb(68, 55, 0); font-weight:bold; background-color:rgb(255, 236, 152);"
+                        class="mt-2 p-3"
+                    >
+                        Image skipped, redirecting...
+                    </div>
                 </div>
                 <div id="enter-text-container" class="mt-3">
                     <div>
                         <textarea id="enter-text-input" style="width:100%;" placeholder="enter text here"></textarea>
                     </div>
-                    <div>
-                        <button id="submit-annotation-btn" class="btn btn-primary">
-                            <strong>Submit</strong>
-                        </button>
+                    <div style="display:flex;" id="btn-container">
+                        <div>
+                            <button id="submit-annotation-btn" class="btn btn-primary">
+                                <strong>Submit</strong>
+                            </button>
+                        </div>
+                        <div class="ml-4">
+                            <button id="flag-image-btn" class="btn btn-danger">
+                                <strong>Skip 👎</strong>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="skip-image-container" style="display:none;">
+                        <div class="alert alert-warning">
+                            <h3><strong>🚨 You are About to Skip this Image 🚨</strong></h3>
+                            <p class="mt-4 mb-3">
+                                <strong>Reasons to skip an image:</strong>
+                                <ul>
+                                    <li>The image is not a meme. Picutes of social media sites are not memes.</li>
+                                    <li>No significant text in the image.</li>
+                                    <li>The image or text is offensive.</li>
+                                </ul>
+                            </p>
+                            <button id="continue-with-skip-btn" class="btn btn-primary">Continue</button>
+                            <button id="cancel-skip-btn" class="btn btn-secondary ml-3">Cancel</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -113,6 +142,15 @@
     function setSuccessMsg(successString){
         $("#success-container").text(successString)
         $("#success-container").slideDown(100)
+    }
+    function addImageFlaggedMsg() {
+        $("#image-flagged-container").slideDown(100)
+    }
+    function flagImageBtnIsDisabled() {
+        return $("#continue-with-skip-btn").hasClass('disabled')
+    }
+    function disableFlagImageBtn() {
+        return $("#continue-with-skip-btn").addClass('disabled')
     }
     $(document).ready(()=>{
         disableForm()
@@ -185,6 +223,41 @@
         })
         $("#continue-btn").on("click", (event)=>{
             $("#nav-annotation-tab").tab("show")
+        })
+
+        $("#flag-image-btn").click(()=>{
+            $("#btn-container").hide()
+            $("#skip-image-container").slideDown(250, ()=>{
+                setTimeout(()=>{
+                    window.scrollTo(0,document.body.scrollHeight);
+                })
+            })
+        })
+        $("#cancel-skip-btn").click(()=>{
+            $("#skip-image-container").hide()
+            $("#btn-container").show()
+        })
+        $("#continue-with-skip-btn").click(()=>{
+            if(flagImageBtnIsDisabled()) {
+                return
+            }
+            disableFlagImageBtn()
+            const url = "/memetext/api/flag-image/" + getImageSlug()
+            postJson(url, {},
+                (success, status, xhr)=>{
+                    if (xhr.status == 200) {
+                        addImageFlaggedMsg()
+                        setTimeout(()=>{
+                            window.location = "{% url 'memetext-web-add-annotation' %}?skip_instructions=1"
+                        }, 1000)
+                    } else {
+                        setErrors("Something went wrong. Please refresh.")
+                    }
+                },
+                (success, status, xhr)=>{
+                    setErrors(":( Something went wrong. Please refresh.")
+                },
+            )
         })
 
     })

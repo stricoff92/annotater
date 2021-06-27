@@ -195,6 +195,37 @@ def add_test_annotation(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@user_can_use_memetext_api_widget
+def flag_image(request, image_slug:str):
+    query_service = QueryService()
+    assigned_annotation, batch = query_service.get_assigned_annotation_and_batch_from_user(
+        request.user)
+    if not assigned_annotation:
+        return Response(
+            "No assignment.",
+            status.HTTP_400_BAD_REQUEST)
+
+    s3_image = get_object_or_404(S3Image, slug=image_slug)
+    if s3_image.batch != batch:
+        return Response(
+            "Invalid batch.",
+            status.HTTP_400_BAD_REQUEST)
+
+    if s3_image.slug != request.user.userprofile.assigned_item:
+        return Response(
+            "Item not assigned.",
+            status.HTTP_400_BAD_REQUEST)
+
+    if s3_image.is_flagged:
+        return Response({}, status.HTTP_200_OK)
+
+    s3_image.is_flagged = True
+    s3_image.save(update_fields=['is_flagged'])
+    return Response({}, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
 @permission_classes([IsAdminUser])
 @user_can_use_memetext_api_widget
 def add_control_annotation(request):
