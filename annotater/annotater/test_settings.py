@@ -5,6 +5,7 @@ from .settings import *
 
 ENV = "TESTING"
 DEBUG = True
+IS_TEST_ENV = True
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 AUTH_PASSWORD_VALIDATORS = []

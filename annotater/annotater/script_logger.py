@@ -33,17 +33,20 @@ def _clean_context_for_file_name(name:str) -> str:
 class FileHandlerFactory:
     @staticmethod
     def create(*a, **k):
-        return logging.FileHandler(*a, **k)
+        if not settings.IS_TEST_ENV:
+            return logging.FileHandler(*a, **k)
+        else:
+            return logging.NullHandler()
 
 
-def spawn_logger(context:str, uid=None, level=logging.DEBUG, formating="%(asctime)s - %(levelname)s - %(message)s", stdout_fh=False, stdout_only=False):
+def spawn_logger(context:str, uid=None, level=logging.DEBUG, formating="%(asctime)s - %(levelname)s - %(message)s", stdout_fh=False, stdout_only=False, file_per_day=False):
     if stdout_only and not stdout_fh:
         raise ValueError
 
     attach_file_handler = not stdout_only
     cleaned_context = _clean_context_for_file_name(context)
     uid = uid or uuid.uuid4().hex
-    now = timezone.now().strftime("%Y%m%dT%H%M%S")
+    now = timezone.now().strftime("%Y%m%d" if file_per_day else "%Y%m%dT%H%M%S")
     file_name = f"{now}-{cleaned_context}.log"
     full_log_file_path = os.path.join(_get_log_dir_path(), file_name)
 

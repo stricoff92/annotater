@@ -17,6 +17,7 @@ from rest_framework.permissions import (
 )
 from botocore.exceptions import ClientError
 
+from memetext.utils import get_annotation_logger
 from memetext.decorators import user_can_use_api_widget as user_can_use_memetext_api_widget
 from memetext.forms import NewTestAnnotation, NewControlAnnotation
 from memetext.models import S3Image, TestAnnotation, ControlAnnotation, AnnotationBatch
@@ -29,6 +30,7 @@ from memetext.services.query import QueryService
 @permission_classes([IsAuthenticated])
 @user_can_use_memetext_api_widget
 def get_image_to_annotate(request, assignment_slug:str):
+    logger = get_annotation_logger()
     empty_response = {
         "load_image_token": None,
         "annotate_image_token": None,
@@ -104,6 +106,7 @@ def get_image_to_annotate(request, assignment_slug:str):
 @user_can_use_memetext_api_widget
 @renderer_classes([JPGRenderer])
 def download_image(request, assignment_slug:str, image_slug:str):
+    logger = get_annotation_logger()
     nowtz = timezone.now()
     user = request.user
     assignment = get_object_or_404(
@@ -147,6 +150,7 @@ def download_image(request, assignment_slug:str, image_slug:str):
 @permission_classes([IsAuthenticated])
 @user_can_use_memetext_api_widget
 def add_test_annotation(request):
+    logger = get_annotation_logger()
     form = NewTestAnnotation(request.data)
     if not form.is_valid():
         return Response(form.errors.as_json(), status.HTTP_400_BAD_REQUEST)
@@ -204,6 +208,7 @@ def add_test_annotation(request):
 @permission_classes([IsAuthenticated])
 @user_can_use_memetext_api_widget
 def flag_image(request, image_slug:str):
+    logger = get_annotation_logger()
     query_service = QueryService()
     assigned_annotation, batch = query_service.get_assigned_annotation_and_batch_from_user(
         request.user)
