@@ -62,9 +62,11 @@ class Command(BaseCommand):
                     counts['bad_extension_other'] += 1
                     continue
                 if p.over_18:
+                    counts['over_18'] += 1
                     self.logger.debug("skipping, over_18")
                     continue
                 if CrawledRedditPost.objects.filter(post_id=p.id).exists():
+                    counts['post_id_match'] += 1
                     self.logger.debug("skipping, same post id")
                     continue
 
@@ -89,7 +91,7 @@ class Command(BaseCommand):
                 try:
                     self.storage_backend.upload_fp(data, settings.MEMETEXT_S3_BUCKET, s3_image.s3_path)
                     self.logger.info("file saved to " + s3_image.s3_path)
-                except:
+                except Exception:
                     raise
                 else:
                     CrawledRedditPost.objects.create(
