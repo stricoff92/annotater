@@ -98,6 +98,7 @@ class Command(BaseCommand):
                         post_id=p.id,
                         post_url=p.url,
                         image_hash=hashed_data,
+                        s3_image=s3_image,
                     )
                     counts['saved'] += 1
 
